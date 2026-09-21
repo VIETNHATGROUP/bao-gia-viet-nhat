@@ -8,409 +8,593 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <!-- Thư viện SheetJS để Nhập/Xuất Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            red: '#D32027',    
-                            blue: '#1D8CC6',   
-                        }
-                    }
-                }
-            }
+            theme: { extend: { colors: { brand: { red: '#D32027', blue: '#1D8CC6' } } } }
         }
     </script>
 
     <style>
-        /* Tùy chỉnh thanh cuộn cho đẹp */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .accordion-content { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; max-height: 0; opacity: 0; overflow: hidden; }
+        .accordion-content.open { max-height: 2000px; opacity: 1; overflow: visible; }
         
-        /* Hiệu ứng mượt cho Accordion */
-        .accordion-content {
-            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-        }
-        .accordion-content.open {
-            max-height: 1000px; /* Số đủ lớn để chứa nội dung */
-            opacity: 1;
-            overflow: visible;
-        }
-
-        /* CSS KHU VỰC IN (PDF) */
+        /* CSS cho in ấn giống mẫu */
         @media print {
-            body { background-color: white !important; }
+            body { background-color: white !important; font-family: 'Times New Roman', Times, serif !important; }
             .no-print { display: none !important; }
-            .print-area { 
-                width: 100% !important; 
-                max-width: 100% !important; 
-                margin: 0 !important; 
-                padding: 0 !important;
-                box-shadow: none !important;
-                border: none !important;
-            }
-            @page { size: A4 portrait; margin: 15mm; }
+            .print-area { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
+            @page { size: A4 portrait; margin: 10mm; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            .print-text { font-size: 13px; line-height: 1.4; color: #000; }
         }
+        
+        .print-text { font-size: 13px; line-height: 1.4; color: #000; font-family: Arial, sans-serif; }
+        .table-print th, .table-print td { border: 1px solid #000; padding: 6px; vertical-align: middle; }
+        .table-print th { text-align: center; font-weight: bold; font-size: 12px; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen">
 
-    <!-- THANH HEADER CHUNG -->
+    <!-- HEADER -->
     <div class="bg-white shadow-sm border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50 no-print">
         <div class="flex items-center gap-3">
-            <img src="Gemini_Generated_Image_unxaj9unxaj9unxa.png" alt="Việt Nhật Group" class="h-10 object-contain">
-            <h1 class="font-black uppercase text-brand-red tracking-wide hidden sm:block text-lg">BÁO GIÁ NHANH</h1>
+            <h1 class="font-black uppercase text-brand-red tracking-wide hidden sm:block text-lg"><i class="fa-solid fa-file-invoice mr-2"></i>BÁO GIÁ VN</h1>
         </div>
-        <button onclick="window.print()" class="bg-brand-red hover:bg-[#b51b21] text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform transform hover:-translate-y-0.5 flex items-center text-sm">
-            <i class="fa-solid fa-file-pdf mr-2"></i> XUẤT PDF
-        </button>
+        <div class="flex gap-2">
+            <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm text-sm"><i class="fa-solid fa-file-excel mr-1"></i> Xuất Excel</button>
+            <button onclick="window.print()" class="bg-brand-red hover:bg-[#b51b21] text-white font-bold py-2 px-6 rounded-lg shadow-md text-sm"><i class="fa-solid fa-print mr-2"></i> IN BÁO GIÁ</button>
+        </div>
     </div>
 
-    <!-- KHU VỰC LÀM VIỆC CHÍNH (Chia 2 cột trên Desktop) -->
-    <div class="max-w-[1400px] mx-auto p-4 md:p-6 flex flex-col lg:flex-row gap-6 items-start">
+    <div class="max-w-[1500px] mx-auto p-4 flex flex-col lg:flex-row gap-4 items-start">
         
-        <!-- ================= CỘT TRÁI: FORM NHẬP LIỆU (ACCORDION) ================= -->
-        <div class="w-full lg:w-[400px] xl:w-[450px] shrink-0 flex flex-col gap-4 no-print sticky top-20">
+        <!-- ================= CỘT TRÁI: FORM NHẬP LIỆU ================= -->
+        <div class="w-full lg:w-[450px] shrink-0 flex flex-col gap-3 no-print h-[calc(100vh-80px)] overflow-y-auto pr-2 custom-scrollbar">
             
-            <!-- Accordion 1: Thông tin nhân viên -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <button onclick="toggleAccordion('acc-sales', 'icon-sales')" class="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100 flex justify-between items-center transition-colors">
-                    <h2 class="font-bold text-brand-blue flex items-center text-base">
-                        <i class="fa-solid fa-user-tie mr-3 w-5 text-center"></i> 1. Người báo giá
-                    </h2>
-                    <i id="icon-sales" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300 rotate-180"></i>
+            <!-- 1. Công ty & Sales -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+                <button onclick="toggleAccordion('acc-company')" class="w-full px-4 py-3 bg-slate-50 flex justify-between items-center rounded-t-xl font-bold text-brand-blue">
+                    <span>1. Thông tin Công ty & NV Bán hàng</span><i class="fa-solid fa-chevron-down"></i>
                 </button>
-                <div id="acc-sales" class="accordion-content open px-5 py-4 border-t border-slate-100">
-                    <div class="mb-4">
-                        <div class="flex gap-3">
-                            <label class="flex-1 flex items-center p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 has-[:checked]:border-brand-blue has-[:checked]:bg-blue-50/50 transition-all text-sm">
-                                <input type="radio" name="company_type" value="nhua_viet_nhat" class="w-4 h-4 text-brand-blue focus:ring-brand-blue" checked onchange="updateLivePreview()">
-                                <span class="ml-2 font-semibold text-slate-700">Nhựa Việt Nhật</span>
-                            </label>
-                            <label class="flex-1 flex items-center p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 has-[:checked]:border-brand-blue has-[:checked]:bg-blue-50/50 transition-all text-sm">
-                                <input type="radio" name="company_type" value="viet_nhat_cn" class="w-4 h-4 text-brand-blue focus:ring-brand-blue" onchange="updateLivePreview()">
-                                <span class="ml-2 font-semibold text-slate-700">Việt Nhật CN</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="space-y-3">
-                        <input type="text" id="sales_name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue" placeholder="Tên Sales (VD: Nguyễn Văn A)" oninput="updateLivePreview(); saveSalesInfo();">
-                        <input type="text" id="sales_phone" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue" placeholder="Số điện thoại" oninput="updateLivePreview(); saveSalesInfo();">
-                        <input type="email" id="sales_email" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue" placeholder="Email công ty" oninput="updateLivePreview(); saveSalesInfo();">
-                    </div>
-                    <p class="text-xs text-slate-400 mt-3 italic"><i class="fa-solid fa-check mr-1"></i>Đã tự động lưu thông tin cho lần sau.</p>
-                </div>
-            </div>
-
-            <!-- Accordion 2: Thông tin khách hàng -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <button onclick="toggleAccordion('acc-cus', 'icon-cus')" class="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100 flex justify-between items-center transition-colors">
-                    <h2 class="font-bold text-brand-blue flex items-center text-base">
-                        <i class="fa-solid fa-building mr-3 w-5 text-center"></i> 2. Khách hàng
-                    </h2>
-                    <i id="icon-cus" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300 rotate-180"></i>
-                </button>
-                <div id="acc-cus" class="accordion-content open px-5 py-4 border-t border-slate-100">
-                    <div class="space-y-3">
-                        <input type="text" id="cus_company" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue font-semibold" placeholder="Tên Công ty / Khách hàng *" oninput="updateLivePreview()">
-                        <div class="flex gap-3">
-                            <input type="text" id="cus_name" class="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-blue" placeholder="Người liên hệ" oninput="updateLivePreview()">
-                            <input type="text" id="cus_phone" class="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-blue" placeholder="SĐT khách" oninput="updateLivePreview()">
-                        </div>
-                        <input type="text" id="cus_address" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue" placeholder="Địa chỉ nhận hàng" oninput="updateLivePreview()">
+                <div id="acc-company" class="accordion-content open px-4 py-3 border-t">
+                    <select id="company_select" onchange="loadCompanyDefaults()" class="w-full mb-3 p-2 border rounded text-sm bg-blue-50 font-bold">
+                        <option value="nhua_viet_nhat">CÔNG TY TNHH NHỰA VIỆT NHẬT</option>
+                        <option value="viet_nhat_cn">CÔNG TY TNHH CÔNG NGHIỆP VIỆT NHẬT</option>
+                    </select>
+                    <div class="space-y-2 text-sm">
+                        <input type="text" id="com_name" class="w-full p-2 border rounded" placeholder="Tên công ty" oninput="updatePreview()">
+                        <input type="text" id="com_mst" class="w-full p-2 border rounded" placeholder="MST Công ty" oninput="updatePreview()">
+                        <textarea id="com_address" class="w-full p-2 border rounded" rows="2" placeholder="Địa chỉ công ty" oninput="updatePreview()"></textarea>
+                        <hr class="my-2">
+                        <input type="text" id="sales_name" class="w-full p-2 border rounded" placeholder="Tên NV Bán hàng (NVBH)" oninput="updatePreview(); saveCache();">
+                        <input type="text" id="sales_phone" class="w-full p-2 border rounded" placeholder="Hotline / SĐT" oninput="updatePreview(); saveCache();">
+                        <input type="email" id="sales_email" class="w-full p-2 border rounded" placeholder="Email NV" oninput="updatePreview(); saveCache();">
                     </div>
                 </div>
             </div>
 
-            <!-- Accordion 3: Sản phẩm -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <button onclick="toggleAccordion('acc-prod', 'icon-prod')" class="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100 flex justify-between items-center transition-colors">
-                    <h2 class="font-bold text-brand-blue flex items-center text-base">
-                        <i class="fa-solid fa-box-open mr-3 w-5 text-center"></i> 3. Sản phẩm
-                    </h2>
-                    <i id="icon-prod" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300 rotate-180"></i>
+            <!-- 2. Khách hàng -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+                <button onclick="toggleAccordion('acc-cus')" class="w-full px-4 py-3 bg-slate-50 flex justify-between items-center font-bold text-brand-blue">
+                    <span>2. Thông tin Khách hàng</span><i class="fa-solid fa-chevron-down"></i>
                 </button>
-                <div id="acc-prod" class="accordion-content open px-5 py-4 border-t border-slate-100">
-                    <div class="flex flex-col gap-2 mb-4">
-                        <input type="text" id="prod_search" list="productList" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-blue shadow-inner" placeholder="🔍 Tên / Mã sản phẩm...">
-                        <datalist id="productList">
-                            <option value="Sóng hở VN04 (Màu xanh) - 65,000đ"></option>
-                            <option value="Sóng bít VN05 (Màu đỏ) - 70,000đ"></option>
-                            <option value="Pallet nhựa liền khối 1200x1000 - 550,000đ"></option>
-                            <option value="Rổ nhựa chữ nhật lớn - 45,000đ"></option>
-                        </datalist>
+                <div id="acc-cus" class="accordion-content open px-4 py-3 border-t space-y-2 text-sm">
+                    <div class="flex gap-2">
+                        <input type="text" id="search_mst" class="flex-1 p-2 border rounded border-brand-blue" placeholder="Nhập MST để tra cứu tự động...">
+                        <button onclick="fetchTaxCode()" id="btn_search_mst" class="bg-brand-blue text-white px-3 rounded hover:bg-blue-700">Tra cứu</button>
+                    </div>
+                    <p id="mst_msg" class="text-xs text-red-500 hidden"></p>
+                    <input type="text" id="cus_company" class="w-full p-2 border rounded font-bold" placeholder="Tên công ty / Khách hàng *" oninput="updatePreview()">
+                    <input type="text" id="cus_address" class="w-full p-2 border rounded" placeholder="Địa chỉ" oninput="updatePreview()">
+                    <input type="text" id="cus_mst" class="w-full p-2 border rounded" placeholder="Mã số thuế" oninput="updatePreview()">
+                    <div class="flex gap-2">
+                        <input type="text" id="cus_name" class="w-1/2 p-2 border rounded" placeholder="Người liên hệ" oninput="updatePreview()">
+                        <input type="text" id="cus_phone" class="w-1/2 p-2 border rounded" placeholder="SĐT khách" oninput="updatePreview()">
+                    </div>
+                    <button onclick="saveCustomer()" class="w-full text-xs text-slate-500 hover:text-brand-blue mt-1 text-left"><i class="fa-solid fa-save mr-1"></i> Lưu thông tin khách này vào bộ nhớ</button>
+                </div>
+            </div>
+
+            <!-- 3. Sản phẩm -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+                <button onclick="toggleAccordion('acc-prod')" class="w-full px-4 py-3 bg-slate-50 flex justify-between items-center font-bold text-brand-blue">
+                    <span>3. Danh sách Báo giá</span><i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div id="acc-prod" class="accordion-content open px-4 py-3 border-t text-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block font-bold">Thêm sản phẩm:</label>
                         <div class="flex gap-2">
-                            <input type="number" id="prod_qty" min="1" value="1" class="w-20 bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-blue text-center" placeholder="SL">
-                            <button onclick="addProduct()" class="flex-1 bg-brand-blue hover:bg-[#156e9e] text-white rounded-lg font-bold transition-colors text-sm py-2">
-                                <i class="fa-solid fa-plus mr-1"></i> Thêm vào báo giá
-                            </button>
+                            <label class="cursor-pointer bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded text-xs">
+                                <i class="fa-solid fa-upload"></i> Nhập Excel
+                                <input type="file" id="excel_upload" accept=".xlsx, .xls" class="hidden" onchange="importExcel(event)">
+                            </label>
                         </div>
                     </div>
                     
-                    <!-- Giỏ hàng nhỏ trong Accordion -->
-                    <div class="max-h-48 overflow-y-auto border border-slate-200 rounded-lg text-sm bg-slate-50 custom-scrollbar">
-                        <table class="w-full text-left">
-                            <tbody id="mini_cart_body" class="divide-y divide-slate-200">
-                                <!-- JS fill here -->
-                                <tr><td class="p-4 text-center text-slate-400 italic text-xs">Chưa có sản phẩm.</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="space-y-2 border border-slate-200 p-3 rounded bg-slate-50">
+                        <div class="flex items-center gap-2">
+                            <label class="w-1/3 cursor-pointer bg-white border border-slate-300 text-center py-2 rounded hover:bg-slate-100 flex flex-col items-center justify-center">
+                                <i class="fa-solid fa-image text-slate-400 text-lg"></i>
+                                <span class="text-[10px] mt-1 text-slate-500">Tải ảnh lên</span>
+                                <input type="file" id="prod_img" accept="image/*" class="hidden" onchange="previewImage(event)">
+                            </label>
+                            <img id="img_preview" src="" class="h-12 w-12 object-contain hidden border bg-white">
+                            <input type="text" id="prod_code" class="flex-1 p-2 border rounded" placeholder="Mã sản phẩm (VD: VN01-HL)">
+                        </div>
+                        <textarea id="prod_specs" class="w-full p-2 border rounded" rows="3" placeholder="Thông số sản phẩm (Gõ Enter để xuống dòng. VD: Kích thước: 370x90mm...)"></textarea>
+                        <div class="flex gap-2">
+                            <input type="text" id="prod_color" class="w-1/3 p-2 border rounded" placeholder="Màu sắc">
+                            <input type="number" id="prod_qty" class="w-1/4 p-2 border rounded" placeholder="SL">
+                            <input type="number" id="prod_price" class="flex-1 p-2 border rounded" placeholder="Đơn giá (VNĐ)">
+                        </div>
+                        <button onclick="addProduct()" class="w-full bg-brand-blue text-white py-2 rounded font-bold hover:bg-blue-700">Thêm vào bảng</button>
+                    </div>
+
+                    <div class="mt-3 max-h-40 overflow-y-auto bg-white border rounded">
+                        <ul id="mini_cart" class="divide-y text-xs"></ul>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-xs text-brand-blue flex items-start mt-2">
-                <i class="fa-solid fa-lightbulb mt-0.5 mr-2"></i>
-                <p><strong>Mẹo:</strong> Bản xem trước bên phải sẽ tự động cập nhật ngay khi bạn gõ. Hãy kiểm tra kỹ trước khi bấm "Xuất PDF".</p>
+            <!-- 4. Ghi chú & VAT -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+                <button onclick="toggleAccordion('acc-notes')" class="w-full px-4 py-3 bg-slate-50 flex justify-between items-center font-bold text-brand-blue">
+                    <span>4. Cấu hình VAT & Ghi chú</span><i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div id="acc-notes" class="accordion-content open px-4 py-3 border-t text-sm space-y-3">
+                    <div class="flex items-center gap-2">
+                        <label class="font-bold">Thuế suất VAT (%):</label>
+                        <input type="number" id="vat_rate" value="8" class="w-16 p-1 border rounded text-center" oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Ghi chú phụ (*):</label>
+                        <textarea id="note_star" rows="2" class="w-full p-2 border rounded" oninput="updatePreview()">* Màu sắc sản phẩm thực tế có thể khác so với hiển thị trên màn hình của quý khách.
+** Đơn giá trên chỉ áp dụng cho số lượng và địa chỉ giao hàng như trên báo giá.</textarea>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Điều khoản (1,2,3...):</label>
+                        <textarea id="note_terms" rows="6" class="w-full p-2 border rounded leading-relaxed" oninput="updatePreview()">1. Giá trên Đã bao gồm VAT, Chi Phí Vận Chuyển đã bao gồm, Không bao gồm các chi phí phát sinh khác nếu có.
+2. Hình thức giao hàng: Giao tại địa chỉ khách hàng
+3. Hình thức thanh toán: Chuyển khoản / Tiền Mặt
+    VietinBank, STK: 1106 4343 8386, chủ tài khoản: CÔNG TY TNHH NHỰA VIỆT NHẬT
+4. Thời gian giao hàng: từ ... đến ... kể từ khi Công Ty nhận được xác nhận đặt hàng và thanh toán.
+5. Báo giá có giá trị 15 ngày kể từ ngày gửi.</textarea>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- ================= CỘT PHẢI: BẢN IN XEM TRƯỚC (LIVE PREVIEW) ================= -->
-        <div class="w-full lg:flex-1 print-area flex justify-center">
+        <!-- ================= CỘT PHẢI: BẢN IN ================= -->
+        <div class="w-full lg:flex-1 flex justify-center bg-slate-300 p-4 lg:p-8 overflow-auto print-area rounded">
             
             <!-- TỜ GIẤY A4 -->
-            <div id="quote-document" class="bg-white w-full max-w-[800px] p-8 md:p-12 rounded-xl shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] border border-slate-200 print-area relative">
+            <div id="quote-document" class="bg-white w-[800px] min-h-[1130px] p-10 shadow-2xl relative print-area text-black">
                 
-                <!-- Hình nền mờ chống giả (Tuỳ chọn) -->
-                <!-- <div class="absolute inset-0 z-0 opacity-[0.03] flex items-center justify-center pointer-events-none">
-                    <img src="Gemini_Generated_Image_unxaj9unxaj9unxa.png" class="w-2/3">
-                </div> -->
-
-                <div class="relative z-10">
-                    <!-- Header Báo giá -->
-                    <div class="flex justify-between items-start mb-8 border-b-4 border-brand-red pb-6 gap-4">
-                        <div class="flex items-start gap-4">
-                            <img src="Gemini_Generated_Image_unxaj9unxaj9unxa.png" alt="Logo Việt Nhật" class="h-20 object-contain">
-                            <div>
-                                <h2 id="print_company_name" class="text-xl font-black text-brand-red uppercase tracking-wide">CÔNG TY TNHH NHỰA VIỆT NHẬT</h2>
-                                <p class="text-xs font-medium mt-1 text-slate-700">Địa chỉ: KCN Tân Tạo, Q.Bình Tân, TP.HCM</p>
-                                <p class="text-xs font-medium text-slate-700">Hotline: 1900 xxxx - Website: vietnhat.vn</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <h1 class="text-3xl font-black text-slate-800 mb-1 tracking-widest">BÁO GIÁ</h1>
-                            <p class="text-xs font-medium text-slate-500">Ngày: <span id="print_date" class="text-slate-800"></span></p>
-                            <p class="text-xs font-medium text-slate-500">Số: BG-<span id="print_code" class="text-slate-800"></span></p>
+                <!-- Header -->
+                <div class="flex justify-between items-start mb-6 border-b-2 border-slate-800 pb-4">
+                    <div class="flex gap-4 items-start w-2/3">
+                        <img src="Gemini_Generated_Image_unxaj9unxaj9unxa.png" alt="Logo" class="h-16 w-24 object-contain mt-1">
+                        <div class="print-text">
+                            <h2 id="print_com_name" class="font-bold text-base uppercase text-brand-red">CÔNG TY TNHH NHỰA VIỆT NHẬT</h2>
+                            <p>Địa chỉ: <span id="print_com_address">...</span></p>
+                            <p>MST: <span id="print_com_mst">...</span></p>
+                            <p>Hotline: <span id="print_sales_phone" class="font-bold">...</span></p>
+                            <p>Email: <span id="print_sales_email">...</span></p>
                         </div>
                     </div>
-
-                    <!-- Kính gửi -->
-                    <div class="mb-6 bg-slate-50 p-4 border border-slate-200 rounded text-sm">
-                        <div class="grid grid-cols-2 gap-y-2 gap-x-4">
-                            <div class="col-span-2 flex"><span class="font-bold text-slate-600 w-24 shrink-0">Kính gửi:</span> <span id="print_cus_company" class="font-bold uppercase text-brand-blue text-base">...</span></div>
-                            <div class="col-span-2 flex"><span class="font-bold text-slate-600 w-24 shrink-0">Địa chỉ:</span> <span id="print_cus_address" class="font-medium text-slate-800">...</span></div>
-                            <div class="flex"><span class="font-bold text-slate-600 w-24 shrink-0">Người LH:</span> <span id="print_cus_name" class="font-medium text-slate-800">...</span></div>
-                            <div class="flex"><span class="font-bold text-slate-600 w-24 shrink-0">Điện thoại:</span> <span id="print_cus_phone" class="font-medium text-slate-800">...</span></div>
-                        </div>
+                    <div class="text-right w-1/3 mt-2">
+                        <h1 class="text-2xl font-bold mb-1">BẢNG BÁO GIÁ</h1>
+                        <p class="print-text">Ngày: <span id="print_date"></span></p>
                     </div>
-                    
-                    <p class="mb-3 text-[13px] font-medium italic text-slate-700">Chúng tôi xin trân trọng báo giá các mặt hàng sau:</p>
+                </div>
 
-                    <!-- Bảng in báo giá -->
-                    <table class="w-full text-left border-collapse text-[13px] mb-8">
-                        <thead>
-                            <tr class="bg-brand-red text-white">
-                                <th class="p-2 border border-brand-red text-center w-10 font-bold">STT</th>
-                                <th class="p-2 border border-brand-red font-bold">Tên hàng hóa</th>
-                                <th class="p-2 border border-brand-red text-center w-12 font-bold">SL</th>
-                                <th class="p-2 border border-brand-red text-right w-24 font-bold">Đơn giá</th>
-                                <th class="p-2 border border-brand-red text-right w-28 font-bold">Thành tiền</th>
-                            </tr>
-                        </thead>
-                        <tbody id="print_cart_body" class="text-slate-800 bg-white">
-                            <tr><td colspan="5" class="p-8 text-center text-slate-300 italic">Vui lòng thêm sản phẩm ở cột bên trái...</td></tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="bg-slate-50">
-                                <td colspan="4" class="p-2 border border-slate-300 text-right font-bold uppercase text-slate-600">Tổng cộng:</td>
-                                <td id="print_cart_total" class="p-2 border border-slate-300 text-right font-black text-brand-red text-[15px]">0</td>
-                            </tr>
-                        </tfoot>
+                <!-- Kính gửi -->
+                <div class="mb-4 print-text leading-[1.6]">
+                    <div class="flex"><span class="w-32">Kính gửi khách hàng:</span> <span id="print_cus_company" class="font-bold uppercase">...</span></div>
+                    <div class="flex"><span class="w-32">Địa chỉ:</span> <span id="print_cus_address">...</span></div>
+                    <div class="flex"><span class="w-32">MST:</span> <span id="print_cus_mst">...</span></div>
+                    <div class="flex"><span class="w-32">Liên hệ:</span> <span id="print_cus_name">...</span></div>
+                    <div class="flex"><span class="w-32">SĐT:</span> <span id="print_cus_phone">...</span></div>
+                    <div class="flex"><span class="w-32">NVBH:</span> <span id="print_sales_name" class="uppercase">...</span></div>
+                    <p class="mt-2 font-bold italic" id="print_intro_text">Công ty TNHH Nhựa Việt Nhật kính gửi Bảng Báo Giá chi tiết:</p>
+                </div>
+
+                <!-- Bảng sản phẩm -->
+                <table class="w-full table-print mb-2 border-collapse border border-black">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="w-10">STT</th>
+                            <th class="w-24">HÌNH ẢNH<br>SẢN PHẨM</th>
+                            <th class="w-24">MÃ SẢN PHẨM</th>
+                            <th>THÔNG SỐ SẢN PHẨM</th>
+                            <th class="w-20">MÀU SẮC</th>
+                            <th class="w-16">SỐ LƯỢNG</th>
+                            <th class="w-24">ĐƠN GIÁ</th>
+                            <th class="w-28">THÀNH TIỀN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="print_cart_body" class="print-text text-center">
+                        <tr><td colspan="8" class="p-4 text-gray-400 italic">Chưa có sản phẩm...</td></tr>
+                    </tbody>
+                </table>
+
+                <!-- Ghi chú sao (*) -->
+                <div id="print_note_star" class="print-text text-[11px] whitespace-pre-line mb-6"></div>
+
+                <!-- Tổng tiền -->
+                <div class="flex justify-end mb-6 print-text">
+                    <table class="w-[350px] font-bold">
+                        <tr>
+                            <td class="py-1 border-b border-black w-2/3">Tiền hàng</td>
+                            <td class="py-1 border-b border-black text-right" id="print_subtotal">0</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1 border-b border-black">Thuế VAT <span id="print_vat_label">8</span>%</td>
+                            <td class="py-1 border-b border-black text-right" id="print_vat_amount">0</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1 border-b border-black">TỔNG CỘNG SAU THUẾ VAT</td>
+                            <td class="py-1 border-b border-black text-right" id="print_total">0</td>
+                        </tr>
                     </table>
+                </div>
 
-                    <!-- Chữ ký -->
-                    <div class="flex justify-between mt-12 text-center text-sm">
-                        <div class="w-1/2">
-                            <p class="font-bold text-slate-800 mb-24">Đại diện Khách hàng</p>
-                        </div>
-                        <div class="w-1/2">
-                            <p class="font-bold text-slate-800 mb-20" id="print_sales_company">Đại diện Nhựa Việt Nhật</p>
-                            <p class="font-black text-base text-brand-blue uppercase" id="print_sales_name">...</p>
-                            <p class="font-medium text-slate-700 mt-1" id="print_sales_phone">...</p>
-                            <p class="font-medium text-slate-700" id="print_sales_email">...</p>
-                        </div>
+                <!-- Bằng chữ -->
+                <p class="print-text font-bold italic mb-4">Bằng chữ: <span id="print_money_words" class="font-normal capitalize">Không đồng</span></p>
+
+                <!-- Điều khoản -->
+                <div id="print_note_terms" class="print-text whitespace-pre-line mb-8"></div>
+
+                <!-- Chữ ký -->
+                <p class="print-text text-center mb-6">Nếu có nhu cầu đặt hàng, Quý khách vui lòng xác nhận và gửi lại bảng báo giá này xem như đặt hàng chính thức.</p>
+                <div class="flex justify-between print-text text-center font-bold px-10 pb-20">
+                    <div class="w-1/2">
+                        <p class="mb-20">XÁC NHẬN ĐẶT HÀNG</p>
+                        <p class="font-normal italic">Ký, ghi rõ họ tên</p>
+                    </div>
+                    <div class="w-1/2">
+                        <p class="mb-20">XIN CHÂN THÀNH CẢM ƠN!</p>
+                        <p class="uppercase font-normal">TM. <span id="print_sign_com">CÔNG TY TNHH NHỰA VIỆT NHẬT</span></p>
                     </div>
                 </div>
             </div>
-            
         </div>
     </div>
 
-    <!-- SCRIPT ĐIỀU KHIỂN LOGIC -->
     <script>
-        // 1. Logic Accordion
-        function toggleAccordion(contentId, iconId) {
-            const content = document.getElementById(contentId);
-            const icon = document.getElementById(iconId);
-            
-            if (content.classList.contains('open')) {
-                content.classList.remove('open');
-                icon.classList.remove('rotate-180');
-            } else {
-                content.classList.add('open');
-                icon.classList.add('rotate-180');
-            }
+        // --- 1. DỮ LIỆU CÔNG TY MẶC ĐỊNH ---
+        const companies = {
+            nhua_viet_nhat: { name: "CÔNG TY TNHH NHỰA VIỆT NHẬT", mst: "0312069254", address: "66/94 Bình Thành, Phường Bình Tân, TP Hồ Chí Minh, Việt Nam" },
+            viet_nhat_cn: { name: "CÔNG TY TNHH CÔNG NGHIỆP VIỆT NHẬT", mst: "0305166722", address: "66/92 Bình Thành, Phường Bình Tân, TP Hồ Chí Minh, Việt Nam." }
+        };
+
+        function loadCompanyDefaults() {
+            const val = document.getElementById('company_select').value;
+            document.getElementById('com_name').value = companies[val].name;
+            document.getElementById('com_mst').value = companies[val].mst;
+            document.getElementById('com_address').value = companies[val].address;
+            updatePreview();
         }
 
-        // 2. Logic Lưu & Tải Thông Tin Sales (Auto-save)
-        function saveSalesInfo() {
-            const data = {
-                company: document.querySelector('input[name="company_type"]:checked').value,
-                name: document.getElementById('sales_name').value,
-                phone: document.getElementById('sales_phone').value,
-                email: document.getElementById('sales_email').value
+        // --- 2. XỬ LÝ ẢNH SẢN PHẨM (BASE64) ---
+        let tempBase64Image = "";
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                tempBase64Image = e.target.result;
+                const imgEl = document.getElementById('img_preview');
+                imgEl.src = tempBase64Image;
+                imgEl.classList.remove('hidden');
             };
-            localStorage.setItem('vnQuoteSales_v3', JSON.stringify(data));
+            reader.readAsDataURL(file);
         }
 
-        function loadSalesInfo() {
-            const savedData = localStorage.getItem('vnQuoteSales_v3');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                document.getElementById('sales_name').value = data.name || '';
-                document.getElementById('sales_phone').value = data.phone || '';
-                document.getElementById('sales_email').value = data.email || '';
-                if(data.company) document.querySelector(`input[value="${data.company}"]`).checked = true;
-            }
-            // Thiết lập mã số BG và Ngày tháng
-            const today = new Date();
-            document.getElementById('print_date').innerText = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth()+1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-            document.getElementById('print_code').innerText = Date.now().toString().slice(-6);
-            
-            updateLivePreview(); // Cập nhật preview ngay lúc load trang
-        }
-
-        // 3. Logic Real-time Data Binding (Cập nhật Live Preview)
-        function updateLivePreview() {
-            // Cập nhật Cty
-            const isVietNhat = document.querySelector('input[name="company_type"]:checked').value === 'nhua_viet_nhat';
-            document.getElementById('print_company_name').innerText = isVietNhat ? "CÔNG TY TNHH NHỰA VIỆT NHẬT" : "CÔNG TY TNHH VIỆT NHẬT CÔNG NGHIỆP";
-            document.getElementById('print_sales_company').innerText = isVietNhat ? "Đại diện Nhựa Việt Nhật" : "Đại diện Việt Nhật CN";
-
-            // Cập nhật Nhân viên
-            document.getElementById('print_sales_name').innerText = document.getElementById('sales_name').value || '...';
-            document.getElementById('print_sales_phone').innerText = document.getElementById('sales_phone').value || '';
-            document.getElementById('print_sales_email').innerText = document.getElementById('sales_email').value || '';
-
-            // Cập nhật Khách hàng
-            document.getElementById('print_cus_company').innerText = document.getElementById('cus_company').value || '...';
-            document.getElementById('print_cus_name').innerText = document.getElementById('cus_name').value || '...';
-            document.getElementById('print_cus_phone').innerText = document.getElementById('cus_phone').value || '...';
-            document.getElementById('print_cus_address').innerText = document.getElementById('cus_address').value || '...';
-        }
-
-        // 4. Logic Giỏ Hàng (Cart)
+        // --- 3. QUẢN LÝ GIỎ HÀNG ---
         let cart = [];
-
-        function formatMoney(num) { return num.toLocaleString('vi-VN') + ' đ'; }
+        
+        function formatMoney(num) { return num.toLocaleString('vi-VN'); }
 
         function addProduct() {
-            const input = document.getElementById('prod_search').value;
-            const qty = parseInt(document.getElementById('prod_qty').value) || 1;
+            const code = document.getElementById('prod_code').value.trim();
+            const specs = document.getElementById('prod_specs').value.trim();
+            const color = document.getElementById('prod_color').value.trim();
+            const qty = parseInt(document.getElementById('prod_qty').value) || 0;
+            const price = parseInt(document.getElementById('prod_price').value) || 0;
+
+            if(!specs && !code) { alert("Vui lòng nhập Mã hoặc Thông số SP"); return; }
+            if(qty <= 0) { alert("Vui lòng nhập số lượng"); return; }
+
+            cart.push({ image: tempBase64Image, code, specs, color, qty, price });
             
-            if(!input) return;
-
-            let name = input;
-            let price = 0;
-            if(input.includes('-')) {
-                const parts = input.split('-');
-                name = parts[0].trim();
-                price = parseInt(parts[parts.length-1].replace(/\D/g,'')) || 0; 
-            }
-
-            cart.push({ name, qty, price });
-            document.getElementById('prod_search').value = '';
-            document.getElementById('prod_qty').value = '1';
+            // Reset form add
+            document.getElementById('prod_code').value = '';
+            document.getElementById('prod_specs').value = '';
+            document.getElementById('prod_color').value = '';
+            document.getElementById('prod_qty').value = '';
+            document.getElementById('prod_price').value = '';
+            tempBase64Image = "";
+            document.getElementById('img_preview').classList.add('hidden');
             
             renderCart();
-            // Tự động cuộn xuống dưới cùng của danh sách mini cart
-            const miniCart = document.getElementById('mini_cart_body').parentElement.parentElement;
-            miniCart.scrollTop = miniCart.scrollHeight;
         }
 
-        function removeProduct(index) { 
-            cart.splice(index, 1); 
-            renderCart(); 
-        }
+        function removeProduct(index) { cart.splice(index, 1); renderCart(); }
 
         function renderCart() {
-            const miniTbody = document.getElementById('mini_cart_body');
-            const printTbody = document.getElementById('print_cart_body');
+            const miniCart = document.getElementById('mini_cart');
+            const printBody = document.getElementById('print_cart_body');
             
-            let miniHtml = '';
-            let printHtml = '';
-            let total = 0;
-
             if (cart.length === 0) {
-                miniTbody.innerHTML = '<tr><td class="p-3 text-center text-slate-400 italic text-xs">Chưa có sản phẩm.</td></tr>';
-                printTbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-300 italic">Vui lòng thêm sản phẩm ở cột bên trái...</td></tr>';
-                document.getElementById('print_cart_total').innerText = '0 đ';
+                miniCart.innerHTML = '<li class="p-2 text-gray-400 italic">Chưa có...</li>';
+                printBody.innerHTML = '<tr><td colspan="8" class="p-4 text-gray-400 italic">Chưa có sản phẩm...</td></tr>';
+                updatePreview();
                 return;
             }
 
+            let miniHtml = '', printHtml = '';
+            let subtotal = 0;
+
             cart.forEach((item, index) => {
-                const amount = item.qty * item.price;
-                total += amount;
-                
-                // HTML cho Giỏ hàng nhỏ bên cột trái
+                const total = item.qty * item.price;
+                subtotal += total;
+
+                // Render Left Cart
                 miniHtml += `
-                    <tr class="hover:bg-slate-100 transition-colors">
-                        <td class="p-2 w-full">
-                            <div class="font-semibold text-slate-800 text-[13px]">${item.name}</div>
-                            <div class="text-[12px] text-slate-500">${item.qty} x ${item.price.toLocaleString('vi-VN')} = <span class="font-bold text-brand-red">${amount.toLocaleString('vi-VN')}</span></div>
-                        </td>
-                        <td class="p-2 text-right">
-                            <button onclick="removeProduct(${index})" class="text-slate-400 hover:text-red-500 py-1 px-2 rounded">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </td>
-                    </tr>
+                    <li class="flex justify-between items-center p-2 hover:bg-gray-50">
+                        <div class="flex gap-2 items-center">
+                            ${item.image ? `<img src="${item.image}" class="h-8 w-8 object-contain border">` : ''}
+                            <div>
+                                <p class="font-bold">${item.code}</p>
+                                <p class="text-[10px] text-gray-500">${item.qty} x ${formatMoney(item.price)}</p>
+                            </div>
+                        </div>
+                        <button onclick="removeProduct(${index})" class="text-red-500 hover:text-red-700 px-2"><i class="fa-solid fa-trash"></i></button>
+                    </li>
                 `;
 
-                // HTML cho Bản in PDF bên cột phải
+                // Render Print Table
                 printHtml += `
                     <tr>
-                        <td class="p-2 border border-slate-300 text-center">${index + 1}</td>
-                        <td class="p-2 border border-slate-300 font-semibold">${item.name}</td>
-                        <td class="p-2 border border-slate-300 text-center">${item.qty}</td>
-                        <td class="p-2 border border-slate-300 text-right">${item.price.toLocaleString('vi-VN')}</td>
-                        <td class="p-2 border border-slate-300 text-right font-bold">${amount.toLocaleString('vi-VN')}</td>
+                        <td>${index + 1}</td>
+                        <td class="p-1">${item.image ? `<img src="${item.image}" style="max-height: 60px; max-width: 100%; margin: 0 auto; display: block;">` : ''}</td>
+                        <td class="font-bold">${item.code}</td>
+                        <td class="text-left whitespace-pre-line text-[12px]">${item.specs}</td>
+                        <td>${item.color}</td>
+                        <td>${item.qty}</td>
+                        <td class="text-right pr-2">${formatMoney(item.price)}</td>
+                        <td class="text-right pr-2">${formatMoney(total)}</td>
                     </tr>
                 `;
             });
 
-            miniTbody.innerHTML = miniHtml;
-            printTbody.innerHTML = printHtml;
-            document.getElementById('print_cart_total').innerText = formatMoney(total);
+            miniCart.innerHTML = miniHtml;
+            printBody.innerHTML = printHtml;
+            updatePreview(subtotal);
         }
 
-        // Chạy hàm khởi tạo khi trang load xong
-        window.onload = function() {
-            loadSalesInfo();
-        };
+        // --- 4. CẬP NHẬT BẢN IN (PREVIEW) & TÍNH TOÁN ---
+        function updatePreview(subT = null) {
+            // Cập nhật Cty
+            const comName = document.getElementById('com_name').value || '...';
+            document.getElementById('print_com_name').innerText = comName;
+            document.getElementById('print_sign_com').innerText = comName;
+            document.getElementById('print_intro_text').innerText = `${comName} kính gửi Bảng Báo Giá chi tiết:`;
+            document.getElementById('print_com_mst').innerText = document.getElementById('com_mst').value || '...';
+            document.getElementById('print_com_address').innerText = document.getElementById('com_address').value || '...';
 
-        // Bắt sự kiện Enter khi gõ thêm sản phẩm
-        document.getElementById("prod_qty").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                addProduct();
+            // Cập nhật Nhân viên
+            document.getElementById('print_sales_name').innerText = document.getElementById('sales_name').value || '...';
+            document.getElementById('print_sales_phone').innerText = document.getElementById('sales_phone').value || '...';
+            document.getElementById('print_sales_email').innerText = document.getElementById('sales_email').value || '...';
+
+            // Khách hàng
+            document.getElementById('print_cus_company').innerText = document.getElementById('cus_company').value || '...';
+            document.getElementById('print_cus_address').innerText = document.getElementById('cus_address').value || '...';
+            document.getElementById('print_cus_mst').innerText = document.getElementById('cus_mst').value || '...';
+            document.getElementById('print_cus_name').innerText = document.getElementById('cus_name').value || '...';
+            document.getElementById('print_cus_phone').innerText = document.getElementById('cus_phone').value || '...';
+
+            // Ghi chú
+            document.getElementById('print_note_star').innerText = document.getElementById('note_star').value;
+            document.getElementById('print_note_terms').innerText = document.getElementById('note_terms').value;
+
+            // Tính tiền
+            if (subT === null) {
+                subT = cart.reduce((acc, item) => acc + (item.qty * item.price), 0);
             }
-        });
+            const vatRate = parseFloat(document.getElementById('vat_rate').value) || 0;
+            const vatAmount = (subT * vatRate) / 100;
+            const total = subT + vatAmount;
+
+            document.getElementById('print_subtotal').innerText = formatMoney(subT);
+            document.getElementById('print_vat_label').innerText = vatRate;
+            document.getElementById('print_vat_amount').innerText = formatMoney(vatAmount);
+            document.getElementById('print_total').innerText = formatMoney(total);
+
+            // Đọc số thành chữ
+            document.getElementById('print_money_words').innerText = total > 0 ? DocTienBangChu(total) + " đồng" : "Không đồng";
+        }
+
+        // --- 5. ĐỌC SỐ TIỀN THÀNH CHỮ (VIỆT NAM) ---
+        const mangso = ['không','một','hai','ba','bốn','năm','sáu','bảy','tám','chín'];
+        function dochangchuc(so, daydu) {
+            let chuoi = ""; chuc = Math.floor(so/10); donvi = so%10;
+            if (chuc>1) { chuoi = " " + mangso[chuc] + " mươi"; if (donvi==1) chuoi += " mốt"; } else if (chuc==1) { chuoi = " mười"; if (donvi==1) chuoi += " một"; } else if (daydu && donvi>0) chuoi = " lẻ";
+            if (donvi==5 && chuc>=1) chuoi += " lăm"; else if (donvi>1||(donvi==1&&chuc==0)) chuoi += " " + mangso[donvi];
+            return chuoi;
+        }
+        function docblock(so, daydu) {
+            let chuoi = ""; tram = Math.floor(so/100); so = so%100;
+            if (daydu || tram>0) { chuoi = " " + mangso[tram] + " trăm"; chuoi += dochangchuc(so,true); } else chuoi = dochangchuc(so,false);
+            return chuoi;
+        }
+        function dochangtrieu(so, daydu) {
+            let chuoi = ""; trieu = Math.floor(so/1000000); so = so%1000000;
+            if (trieu>0) { chuoi = docblock(trieu,daydu) + " triệu"; daydu = true; }
+            ngan = Math.floor(so/1000); so = so%1000;
+            if (ngan>0) { chuoi += docblock(ngan,daydu) + " nghìn"; daydu = true; }
+            if (so>0) chuoi += docblock(so,daydu);
+            return chuoi;
+        }
+        function DocTienBangChu(so) {
+            if (so == 0) return "Không";
+            let chuoi = "", hauto = "";
+            do {
+                ty = so % 1000000000; so = Math.floor(so / 1000000000);
+                if (so > 0) chuoi = dochangtrieu(ty, true) + hauto + chuoi; else chuoi = dochangtrieu(ty, false) + hauto + chuoi;
+                hauto = " tỷ";
+            } while (so > 0);
+            chuoi = chuoi.trim();
+            return chuoi.charAt(0).toUpperCase() + chuoi.slice(1);
+        }
+
+        // --- 6. TRA CỨU MÃ SỐ THUẾ (2 API DỰ PHÒNG) ---
+        async function fetchTaxCode() {
+            const mst = document.getElementById('search_mst').value.trim();
+            const msg = document.getElementById('mst_msg');
+            if(!mst) { msg.innerText = "Vui lòng nhập MST"; msg.classList.remove('hidden'); return; }
+            
+            msg.innerText = "Đang tra cứu..."; msg.classList.remove('hidden', 'text-red-500'); msg.classList.add('text-blue-500');
+            const btn = document.getElementById('btn_search_mst'); btn.disabled = true;
+
+            try {
+                // Thử API 1 (VietQR - Ổn định nhất cho Frontend)
+                let res = await fetch(`https://api.vietqr.io/v2/business/${mst}`);
+                let data = await res.json();
+                
+                if (data.code === "00" && data.data) {
+                    fillCustomerForm(data.data.name, data.data.address, mst);
+                    return;
+                }
+
+                // Thử API 2 (Fallback - xinvoice.vn như bạn yêu cầu)
+                res = await fetch(`https://api.xinvoice.vn/gdt-api/tax-payer/${mst}`);
+                data = await res.json();
+                if (data && data.name) {
+                    fillCustomerForm(data.name, data.address, mst);
+                    return;
+                }
+                
+                throw new Error("Không tìm thấy thông tin");
+            } catch (error) {
+                msg.innerText = "Không tra được hoặc MST sai. Vui lòng nhập tay.";
+                msg.classList.remove('text-blue-500'); msg.classList.add('text-red-500');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function fillCustomerForm(name, address, mst) {
+            document.getElementById('cus_company').value = name;
+            document.getElementById('cus_address').value = address;
+            document.getElementById('cus_mst').value = mst;
+            document.getElementById('mst_msg').innerText = "Tra cứu thành công!";
+            document.getElementById('mst_msg').classList.remove('text-red-500');
+            document.getElementById('mst_msg').classList.add('text-green-600');
+            updatePreview();
+        }
+
+        function saveCustomer() {
+            const cus = {
+                name: document.getElementById('cus_company').value,
+                address: document.getElementById('cus_address').value,
+                mst: document.getElementById('cus_mst').value,
+                contact: document.getElementById('cus_name').value,
+                phone: document.getElementById('cus_phone').value
+            };
+            if(!cus.name) return;
+            let list = JSON.parse(localStorage.getItem('vnq_customers') || '[]');
+            list.push(cus);
+            localStorage.setItem('vnq_customers', JSON.stringify(list));
+            alert("Đã lưu khách hàng vào bộ nhớ trình duyệt.");
+        }
+
+        // --- 7. EXCEL EXPORT / IMPORT (SHEETJS) ---
+        function exportToExcel() {
+            const ws_data = [
+                ["Mã Sản Phẩm", "Thông Số Sản Phẩm", "Màu Sắc", "Số Lượng", "Đơn Giá"],
+                ["VN01-HL", "Kích thước: 370x90mm\nChất liệu: HDPE", "Xanh", 100, 150000] // Dòng mẫu
+            ];
+            
+            cart.forEach(item => {
+                ws_data.push([item.code, item.specs, item.color, item.qty, item.price]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "BaoGia");
+            XLSX.writeFile(wb, `BaoGia_${Date.now()}.xlsx`);
+        }
+
+        function importExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+                
+                // Bỏ qua dòng tiêu đề (index 0)
+                for(let i = 1; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    if (row.length === 0) continue;
+                    cart.push({
+                        image: "", // Không hỗ trợ import ảnh trực tiếp từ ô excel đơn giản
+                        code: row[0] || "",
+                        specs: row[1] || "",
+                        color: row[2] || "",
+                        qty: parseInt(row[3]) || 1,
+                        price: parseInt(row[4]) || 0
+                    });
+                }
+                renderCart();
+                document.getElementById('excel_upload').value = ""; // reset
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- 8. KHỞI TẠO & UI ---
+        function toggleAccordion(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('open');
+            el.previousElementSibling.querySelector('i').classList.toggle('rotate-180');
+        }
+
+        function saveCache() {
+            localStorage.setItem('vnq_sales', JSON.stringify({
+                name: document.getElementById('sales_name').value,
+                phone: document.getElementById('sales_phone').value,
+                email: document.getElementById('sales_email').value
+            }));
+        }
+
+        window.onload = function() {
+            // Set Date
+            const today = new Date();
+            document.getElementById('print_date').innerText = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
+            
+            // Load Init Company
+            loadCompanyDefaults();
+
+            // Load Sales Cache
+            const cache = JSON.parse(localStorage.getItem('vnq_sales'));
+            if(cache) {
+                document.getElementById('sales_name').value = cache.name || '';
+                document.getElementById('sales_phone').value = cache.phone || '';
+                document.getElementById('sales_email').value = cache.email || '';
+            }
+            renderCart();
+        };
     </script>
 </body>
 </html>
