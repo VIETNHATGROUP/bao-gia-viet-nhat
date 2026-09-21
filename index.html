@@ -13,8 +13,8 @@
     <style>
         @media print {
             body { background: white !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-            no-print, .sidebar, header, .no-print { display: none !important; }
-            .print-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: none !important; }
+            .sidebar, header.no-print, .no-print { display: none !important; }
+            .print-container { box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: none !important; border: none !important; }
             @page { size: A4; margin: 10mm; }
         }
     </style>
@@ -22,64 +22,152 @@
 <body class="bg-gray-100 font-sans text-gray-800 antialiased">
 
     <div class="flex h-screen overflow-hidden">
-        <!-- SIDEBAR MENU -->
-        <aside class="sidebar w-72 bg-slate-900 text-white flex flex-col shadow-xl no-print z-20">
-            <div class="p-5 border-b border-slate-800 flex items-center space-x-3">
-                <!-- SVG Logo chuẩn Vietnhat Group -->
-                <svg class="w-10 h-10 flex-shrink-0" viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M100 10 L150 60 L130 60 L130 110 L70 110 L70 60 L50 60 Z" fill="#dc2626"/>
-                    <path d="M100 25 C115 25, 125 38, 125 55 C125 72, 100 85, 100 85 C100 85, 75 72, 75 55 C75 38, 85 25, 100 25 Z" fill="#ffffff"/>
-                    <path d="M40 120 Q100 100 160 120 Q100 140 40 120 Z" fill="#2563eb"/>
-                    <path d="M40 135 Q100 115 160 135 Q100 155 40 135 Z" fill="#1d4ed8"/>
-                    <path d="M40 150 Q100 130 160 150 Q100 170 40 150 Z" fill="#1e40af"/>
-                </svg>
+        <!-- SIDEBAR - THANH ĐIỀU KHIỂN & LỰA CHỌN -->
+        <aside class="sidebar w-96 bg-slate-900 text-white flex flex-col shadow-xl no-print z-20 overflow-y-auto">
+            <!-- Logo & Title -->
+            <div class="p-5 border-b border-slate-800 flex items-center space-x-3 sticky top-0 bg-slate-900 z-10">
+                <img src="Gemini_Generated_Image_unxaj9unxaj9unxa-removebg-preview_3.png" alt="Logo Vietnhat Group" class="w-12 h-12 object-contain bg-white rounded p-1 flex-shrink-0">
                 <div>
-                    <h1 class="font-bold text-lg tracking-wider text-red-500">VIETNHAT GROUP</h1>
-                    <p class="text-xs text-slate-400">Hệ Thống Báo Giá</p>
+                    <h1 class="font-bold text-base tracking-wider text-red-500">VIETNHAT GROUP</h1>
+                    <p class="text-xs text-slate-400">Bảng Điều Khiển Báo Giá</p>
                 </div>
             </div>
 
-            <!-- Chọn Công Ty -->
-            <div class="p-4 border-b border-slate-800 bg-slate-800/50">
-                <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Chọn Công Ty Phát Hành:</label>
-                <select id="companySelect" onchange="switchCompany()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
-                    <option value="nhua">CÔNG TY TNHH NHỰA VIỆT NHẬT</option>
-                    <option value="congnghiep">CÔNG TY TNHH CÔNG NGHIỆP VIỆT NHẬT</option>
-                </select>
+            <div class="p-4 space-y-5 flex-1">
+                <!-- 1. Chọn Công Ty Phát Hành -->
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
+                    <label class="block text-xs font-semibold text-red-400 uppercase mb-2"><i class="fa-solid fa-building mr-1"></i> 1. Công Ty Phát Hành:</label>
+                    <select id="companySelect" onchange="switchCompany()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg p-2 text-xs focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="nhua">CÔNG TY TNHH NHỰA VIỆT NHẬT</option>
+                        <option value="congnghiep">CÔNG TY TNHH CÔNG NGHIỆP VIỆT NHẬT</option>
+                    </select>
+                </div>
+
+                <!-- 2. Thông Tin Nhân Viên Bán Hàng (NVBH) -->
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50 space-y-2">
+                    <label class="block text-xs font-semibold text-red-400 uppercase"><i class="fa-solid fa-user-gear mr-1"></i> 2. Thông Tin NVBH:</label>
+                    <input type="text" id="inputSalesName" oninput="saveSalesInfo()" placeholder="Họ tên NVBH" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="inputSalesHotline" oninput="saveSalesInfo()" placeholder="Hotline" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                        <input type="text" id="inputSalesEmail" oninput="saveSalesInfo()" placeholder="Email" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                    </div>
+                </div>
+
+                <!-- 3. Chọn Khách Hàng -->
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs font-semibold text-red-400 uppercase"><i class="fa-solid fa-users mr-1"></i> 3. Khách Hàng:</label>
+                        <button onclick="openCustomerModal()" class="text-[10px] bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded"><i class="fa-solid fa-plus"></i> Thêm KH</button>
+                    </div>
+                    <select id="quoteCustomerSelect" onchange="selectCustomerForQuote()" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg p-2 text-xs focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option value="">-- Chọn khách hàng --</option>
+                    </select>
+                </div>
+
+                <!-- 4. Quản Lý & Thêm Sản Phẩm Vào Báo Giá -->
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs font-semibold text-red-400 uppercase"><i class="fa-solid fa-boxes-stacked mr-1"></i> 4. Sản Phẩm:</label>
+                        <button onclick="openProductSelectorModal()" class="text-[10px] bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 rounded"><i class="fa-solid fa-plus"></i> Chọn SP</button>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="openProductModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-xs py-1.5 rounded text-center"><i class="fa-solid fa-pen-to-square"></i> Quản lý DM SP</button>
+                    </div>
+                </div>
+
+                <!-- 5. Tùy Chọn & Cài Đặt Báo Giá -->
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50 space-y-3 text-xs">
+                    <label class="block font-semibold text-red-400 uppercase"><i class="fa-solid fa-sliders mr-1"></i> 5. Cài Đặt Báo Giá:</label>
+                    
+                    <!-- VAT -->
+                    <div class="flex justify-between items-center">
+                        <span>Thuế suất VAT:</span>
+                        <select id="vatRateSelect" onchange="calculateTotals()" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                            <option value="0">0%</option>
+                            <option value="8" selected>8%</option>
+                            <option value="10">10%</option>
+                        </select>
+                    </div>
+
+                    <!-- Điều khoản VAT -->
+                    <div class="flex justify-between items-center">
+                        <span>Nội dung thuế:</span>
+                        <select id="termVat" onchange="updateTerms()" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-white w-40">
+                            <option value="Đã bao gồm thuế VAT 8%">Đã gồm VAT</option>
+                            <option value="Chưa bao gồm thuế VAT">Chưa gồm VAT</option>
+                        </select>
+                    </div>
+
+                    <!-- Vận chuyển -->
+                    <div class="flex justify-between items-center">
+                        <span>Vận chuyển:</span>
+                        <select id="termShipping" onchange="updateTerms()" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-white w-40">
+                            <option value="Chi phí Vận Chuyển đã bao gồm">Đã gồm VC</option>
+                            <option value="Chi phí Vận Chuyển chưa bao gồm">Chưa gồm VC</option>
+                        </select>
+                    </div>
+
+                    <!-- Hình thức giao hàng -->
+                    <div>
+                        <span class="block mb-1">Giao hàng:</span>
+                        <div class="space-y-1 pl-2">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" name="deliveryType" value="kho" checked onchange="toggleDeliveryType()">
+                                <span>Tại kho công ty</span>
+                            </label>
+                            <input type="text" id="warehouseName" value="Kho Công Ty" oninput="updateTerms()" class="w-full bg-slate-800 border border-slate-700 rounded p-1 text-xs text-white">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" name="deliveryType" value="diachi" onchange="toggleDeliveryType()">
+                                <span>Đến địa chỉ KH</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Hình thức thanh toán -->
+                    <div>
+                        <span class="block mb-1">Thanh toán:</span>
+                        <div class="flex space-x-4 pl-2">
+                            <label class="flex items-center space-x-1 cursor-pointer">
+                                <input type="radio" name="payType" value="Chuyển khoản" checked onchange="togglePayType()">
+                                <span>Chuyển khoản</span>
+                            </label>
+                            <label class="flex items-center space-x-1 cursor-pointer">
+                                <input type="radio" name="payType" value="Tiền mặt" onchange="togglePayType()">
+                                <span>Tiền mặt</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Thời gian & Hiệu lực -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span>Giao từ (ngày):</span>
+                            <input type="text" id="termTimeFrom" value="1-2" class="w-full bg-slate-800 border border-slate-700 rounded p-1 text-center text-white">
+                        </div>
+                        <div>
+                            <span>Đến (ngày):</span>
+                            <input type="text" id="termTimeTo" value="3-5" class="w-full bg-slate-800 border border-slate-700 rounded p-1 text-center text-white">
+                        </div>
+                    </div>
+                    <div>
+                        <span>Hiệu lực báo giá (ngày):</span>
+                        <input type="text" id="termValidityDays" value="15" class="w-full bg-slate-800 border border-slate-700 rounded p-1 text-center text-white">
+                    </div>
+                </div>
             </div>
 
-            <!-- Navigation Tabs -->
-            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-                <button onclick="switchTab('quote')" id="tab-quote" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition bg-red-600 text-white shadow-lg">
-                    <i class="fa-solid fa-file-invoice-dollar w-5"></i>
-                    <span>Tạo Báo Giá</span>
-                </button>
-                <button onclick="switchTab('products')" id="tab-products" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 text-slate-300">
-                    <i class="fa-solid fa-boxes-stacked w-5"></i>
-                    <span>Quản Lý Sản Phẩm</span>
-                </button>
-                <button onclick="switchTab('customers')" id="tab-customers" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 text-slate-300">
-                    <i class="fa-solid fa-users w-5"></i>
-                    <span>Quản Lý Khách Hàng</span>
-                </button>
-                <button onclick="switchTab('settings')" id="tab-settings" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 text-slate-300">
-                    <i class="fa-solid fa-user-gear w-5"></i>
-                    <span>Thông Tin Nhân Viên (NVBH)</span>
-                </button>
-            </nav>
-
             <!-- Footer Sidebar -->
-            <div class="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
+            <div class="p-4 border-t border-slate-800 text-[11px] text-slate-500 text-center">
                 &copy; 2026 Vietnhat Group v3.0
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
+        <!-- MAIN CONTENT - CHỈ HIỂN THỊ DỮ LIỆU CUỐI CÙNG (BẢNG BÁO GIÁ) -->
         <main class="flex-1 overflow-y-auto bg-slate-100 flex flex-col">
-            <!-- Top Bar -->
+            <!-- Top Bar Actions -->
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-8 no-print z-10">
                 <div class="flex items-center space-x-2">
-                    <span id="currentViewTitle" class="text-xl font-bold text-slate-800">Tạo Báo Giá Đơn Hàng</span>
+                    <span class="text-xl font-bold text-slate-800"><i class="fa-solid fa-file-invoice text-red-600 mr-2"></i> Xem Trước Bảng Báo Giá Cuối Cùng</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <button onclick="window.print()" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-md transition flex items-center space-x-2">
@@ -89,400 +177,218 @@
                 </div>
             </header>
 
-            <!-- Content Area -->
-            <div class="p-8 flex-1">
-
-                <!-- TAB 1: TẠO BÁO GIÁ -->
-                <div id="view-quote" class="space-y-6">
-                    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-10 print-container border border-slate-200">
-                        
-                        <!-- Header Phiếu Báo Giá -->
-                        <div class="flex justify-between items-start border-b pb-6 mb-6">
-                            <div class="flex items-start space-x-4">
-                                <svg class="w-16 h-16 flex-shrink-0" viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M100 10 L150 60 L130 60 L130 110 L70 110 L70 60 L50 60 Z" fill="#dc2626"/>
-                                    <path d="M100 25 C115 25, 125 38, 125 55 C125 72, 100 85, 100 85 C100 85, 75 72, 75 55 C75 38, 85 25, 100 25 Z" fill="#ffffff"/>
-                                    <path d="M40 120 Q100 100 160 120 Q100 140 40 120 Z" fill="#2563eb"/>
-                                    <path d="M40 135 Q100 115 160 135 Q100 155 40 135 Z" fill="#1d4ed8"/>
-                                    <path d="M40 150 Q100 130 160 150 Q100 170 40 150 Z" fill="#1e40af"/>
-                                </svg>
-                                <div>
-                                    <h2 id="lblCompanyName" class="text-lg font-bold text-red-600 uppercase">CÔNG TY TNHH NHỰA VIỆT NHẬT</h2>
-                                    <p id="lblCompanyAddress" class="text-xs text-gray-600 mt-0.5">Địa chỉ: 66/94 Bình Thành, Phường Bình Tân, TP Hồ Chí Minh, Việt Nam</p>
-                                    <p id="lblCompanyMST" class="text-xs text-gray-600 mt-0.5">Mã số thuế: 0312069254</p>
-                                    <p class="text-xs text-gray-600 mt-0.5">Hotline: <span id="lblCompanyHotline">0915 873 488</span> | Email: <span id="lblCompanyEmail">vnkd07.vietnhatgroup@gmail.com</span></p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <h2 class="text-2xl font-black text-slate-800 tracking-wide">BẢNG BÁO GIÁ</h2>
-                                <p class="text-xs text-gray-500 mt-1">Ngày: <span id="currentDateDisplay"></span></p>
-                            </div>
-                        </div>
-
-                        <!-- Thông tin khách hàng & NVBH -->
-                        <div class="mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
-                            <div class="flex items-center justify-between">
-                                <label class="block text-xs font-bold text-gray-700 uppercase">Chọn Khách Hàng Từ Danh Bạ:</label>
-                                <select id="quoteCustomerSelect" onchange="selectCustomerForQuote()" class="w-2/3 border border-gray-300 rounded p-1.5 text-sm bg-white focus:ring-2 focus:ring-red-500">
-                                    <option value="">-- Chọn khách hàng --</option>
-                                </select>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 text-xs text-gray-700 pt-2 border-t border-slate-200">
-                                <div><strong>Kính gửi khách hàng:</strong> <span id="qCustName" class="font-medium text-slate-950">...</span></div>
-                                <div><strong>Địa chỉ:</strong> <span id="qCustAddress" class="text-slate-800">...</span></div>
-                                <div><strong>Mã số thuế:</strong> <span id="qCustMST">...</span></div>
-                                <div><strong>Liên hệ / SĐT:</strong> <span id="qCustContact">...</span></div>
-                                <div class="col-span-2"><strong>NVBH:</strong> <span id="qSalesName" class="text-slate-900 font-medium">...</span></div>
-                            </div>
-                        </div>
-
-                        <!-- Danh sách sản phẩm trong báo giá -->
-                        <div class="mb-6">
-                            <div class="flex justify-between items-center mb-3 no-print">
-                                <h3 class="text-sm font-bold text-gray-700 uppercase">Chi Tiết Sản Phẩm Báo Giá</h3>
-                                <button onclick="openProductSelectorModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium shadow flex items-center space-x-1">
-                                    <i class="fa-solid fa-plus"></i>
-                                    <span>Thêm sản phẩm từ danh mục</span>
-                                </button>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full border-collapse border border-gray-300 text-xs">
-                                    <thead>
-                                        <tr class="bg-slate-100 text-gray-700 text-center">
-                                            <th class="border border-gray-300 p-2 w-10">STT</th>
-                                            <th class="border border-gray-300 p-2 w-20">Hình ảnh</th>
-                                            <th class="border border-gray-300 p-2 w-24">Mã SP</th>
-                                            <th class="border border-gray-300 p-2">Thông số sản phẩm</th>
-                                            <th id="colHeaderColor" class="border border-gray-300 p-2 w-24">Màu sắc</th>
-                                            <th class="border border-gray-300 p-2 w-16">Số lượng</th>
-                                            <th class="border border-gray-300 p-2 w-24">Đơn giá (VNĐ)</th>
-                                            <th class="border border-gray-300 p-2 w-28">Thành tiền (VNĐ)</th>
-                                            <th class="border border-gray-300 p-2 w-10 no-print">Xóa</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="quoteItemsTableBody">
-                                        <!-- Dữ liệu sản phẩm thêm vào -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p class="text-[11px] text-gray-500 italic mt-2">* Màu sắc sản phẩm thực tế có thể khác so với hiển thị trên màn hình của quý khách.</p>
-                            <p class="text-[11px] text-gray-500 mt-0.5">** Đơn giá trên chỉ áp dụng cho số lượng và địa chỉ giao hàng như trên báo giá.</p>
-                        </div>
-
-                        <!-- Tổng tiền & VAT -->
-                        <div class="flex justify-end mb-6">
-                            <div class="w-80 space-y-2 text-xs">
-                                <div class="flex justify-between py-1 border-b">
-                                    <span class="font-medium text-gray-600">Tiền hàng:</span>
-                                    <span id="subTotalDisplay" class="font-bold">0</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1 border-b">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="font-medium text-gray-600">Thuế VAT:</span>
-                                        <select id="vatRateSelect" onchange="calculateTotals()" class="border border-gray-300 rounded px-1 py-0.5 text-xs bg-white no-print">
-                                            <option value="0">0%</option>
-                                            <option value="8" selected>8%</option>
-                                            <option value="10">10%</option>
-                                        </select>
-                                        <span class="print-only font-medium text-gray-600" id="vatLabelPrint">8%</span>
-                                    </div>
-                                    <span id="vatAmountDisplay" class="font-bold">0</span>
-                                </div>
-                                <div class="flex justify-between py-2 border-b border-gray-800 text-sm font-bold bg-slate-50 px-2 rounded">
-                                    <span>TỔNG CỘNG SAU THUẾ VAT:</span>
-                                    <span id="grandTotalDisplay" class="text-red-600">0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Điều khoản & Quy định -->
-                        <div class="border-t pt-4 text-xs space-y-3 text-gray-700">
-                            <div><strong>Bằng chữ:</strong> <span id="amountInWordsDisplay" class="italic font-medium">Không đồng</span></div>
-                            
-                            <!-- Điều khoản 1 -->
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span>1. Giá trên</span>
-                                <select id="termVat" onchange="updateTerms()" class="border border-gray-300 rounded px-1.5 py-0.5 text-xs bg-white no-print">
-                                    <option value="Đã bao gồm thuế VAT 8%">Đã bao gồm thuế VAT</option>
-                                    <option value="Chưa bao gồm thuế VAT">Chưa bao gồm thuế VAT</option>
-                                </select>
-                                <span class="print-only font-medium" id="termVatPrint">Đã bao gồm thuế VAT</span>,
-                                <select id="termShipping" onchange="updateTerms()" class="border border-gray-300 rounded px-1.5 py-0.5 text-xs bg-white no-print">
-                                    <option value="Chi phí Vận Chuyển đã bao gồm">Chi phí Vận Chuyển đã bao gồm</option>
-                                    <option value="Chi phí Vận Chuyển chưa bao gồm">Chi phí Vận Chuyển chưa bao gồm</option>
-                                </select>
-                                <span class="print-only font-medium" id="termShippingPrint">Chi phí Vận Chuyển đã bao gồm</span>. Không bao gồm các chi phí phát sinh khác (nếu có).
-                            </div>
-
-                            <!-- Điều khoản 2 -->
-                            <div class="space-y-1">
-                                <span>2. Hình thức giao hàng:</span>
-                                <div class="flex items-center space-x-4 pl-4 no-print">
-                                    <label class="flex items-center space-x-1 cursor-pointer">
-                                        <input type="radio" name="deliveryType" value="kho" checked onchange="toggleDeliveryType()">
-                                        <span>Nhận tại kho:</span>
-                                    </label>
-                                    <input type="text" id="warehouseName" value="Kho Công Ty" oninput="updateTerms()" class="border border-gray-300 rounded px-2 py-0.5 text-xs w-48">
-                                    <label class="flex items-center space-x-1 cursor-pointer">
-                                        <input type="radio" name="deliveryType" value="diachi" onchange="toggleDeliveryType()">
-                                        <span>Giao đến địa chỉ khách hàng</span>
-                                    </label>
-                                </div>
-                                <div id="deliveryDescText" class="font-medium pl-4">Giao hàng tại kho: Kho Công Ty</div>
-                            </div>
-
-                            <!-- Điều khoản 3 -->
-                            <div class="space-y-1">
-                                <span>3. Hình thức thanh toán:</span>
-                                <div class="flex items-center space-x-6 pl-4 no-print">
-                                    <label class="flex items-center space-x-1 cursor-pointer">
-                                        <input type="radio" name="payType" value="Chuyển khoản" checked onchange="togglePayType()">
-                                        <span>Chuyển khoản</span>
-                                    </label>
-                                    <label class="flex items-center space-x-1 cursor-pointer">
-                                        <input type="radio" name="payType" value="Tiền mặt" onchange="togglePayType()">
-                                        <span>Tiền mặt</span>
-                                    </label>
-                                </div>
-                                <div id="bankInfoBox" class="pl-4 font-medium text-slate-800">
-                                    <!-- Dynamic Bank Info -->
-                                </div>
-                            </div>
-
-                            <!-- Điều khoản 4 -->
-                            <div class="flex items-center space-x-2">
-                                <span>4. Thời gian giao hàng: từ</span>
-                                <input type="text" id="termTimeFrom" value="..." class="border border-gray-300 rounded px-2 py-0.5 text-xs w-20 text-center">
-                                <span>đến</span>
-                                <input type="text" id="termTimeTo" value="..." class="border border-gray-300 rounded px-2 py-0.5 text-xs w-20 text-center">
-                                <span>kể từ khi Việt Nhật nhận được xác nhận đặt hàng và</span>
-                                <input type="text" id="termTimeNote" value="thanh toán đơn hàng." class="border border-gray-300 rounded px-2 py-0.5 text-xs w-40">
-                            </div>
-
-                            <!-- Điều khoản 5 -->
-                            <div class="flex items-center space-x-2">
-                                <span>5. Báo giá có giá trị</span>
-                                <input type="text" id="termValidityDays" value="15" class="border border-gray-300 rounded px-1 py-0.5 text-xs w-12 text-center">
-                                <span>ngày kể từ ngày gửi báo giá.</span>
-                            </div>
-
-                            <!-- Điều khoản 6 (Chỉ hiển thị cho Công Nghiệp Việt Nhật) -->
-                            <div id="clause6Box" class="hidden bg-amber-50 p-3 rounded border border-amber-200">
-                                <span class="font-semibold text-amber-900">6. Bảo hành:</span> Bên bán bảo hành tận nơi trong vòng bán kính 40km, đổi miễn phí linh kiện với các lỗi về chất lượng sản phẩm trong thời hạn 12 tháng, riêng bánh xe bảo hành 3 tháng kể từ ngày ký biên bản giao nhận và nghiệm thu hàng hoá. Bên bán không chịu trách nhiệm bảo hành với những lỗi hỏng hóc do người sử dụng gây nên và các lỗi khách quan khác do môi trường sử dụng.
-                            </div>
-                        </div>
-
-                        <!-- Xác nhận & Chữ ký -->
-                        <div class="mt-8 pt-4 border-t text-center text-xs">
-                            <p class="italic font-medium text-slate-600 mb-6">Nếu có nhu cầu đặt hàng, Quý khách vui lòng xác nhận và gửi lại bảng báo giá này xem như đặt hàng chính thức.</p>
-                            <div class="grid grid-cols-2 gap-8 font-bold">
-                                <div>
-                                    <p class="uppercase text-sm">XÁC NHẬN ĐẶT HÀNG</p>
-                                    <p class="text-[11px] font-normal text-gray-500 mt-1">(Ký, ghi rõ họ tên)</p>
-                                    <div class="h-20"></div>
-                                </div>
-                                <div>
-                                    <p class="uppercase text-sm" id="signCompanyName">TM. CÔNG TY TNHH NHỰA VIỆT NHẬT</p>
-                                    <p class="text-[11px] font-normal text-gray-500 mt-1">(Ký, đóng dấu)</p>
-                                    <div class="h-20"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- TAB 2: QUẢN LÝ SẢN PHẨM -->
-                <div id="view-products" class="hidden space-y-6">
-                    <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
-                        <div class="flex justify-between items-center mb-6">
+            <!-- Content Area: BẢNG BÁO GIÁ DUY NHẤT -->
+            <div class="p-8 flex-1 flex justify-center">
+                <div class="w-full max-w-4xl bg-white rounded-xl shadow-lg p-10 print-container border border-slate-200 h-fit">
+                    
+                    <!-- Header Phiếu Báo Giá -->
+                    <div class="flex justify-between items-start border-b pb-6 mb-6">
+                        <div class="flex items-start space-x-4">
+                            <img src="Gemini_Generated_Image_unxaj9unxaj9unxa-removebg-preview_3.png" alt="Logo" class="w-16 h-16 object-contain flex-shrink-0">
                             <div>
-                                <h2 class="text-lg font-bold text-slate-800">Danh Mục Sản Phẩm</h2>
-                                <p class="text-xs text-gray-500">Quản lý danh sách sản phẩm, thông số, hình ảnh và giá cả.</p>
-                            </div>
-                            <div class="flex space-x-3">
-                                <label class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-medium shadow cursor-pointer flex items-center space-x-2">
-                                    <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden" onchange="importExcel(event)">
-                                    <i class="fa-solid fa-file-excel"></i>
-                                    <span>Nhập Excel</span>
-                                </label>
-                                <button onclick="exportExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-medium shadow flex items-center space-x-2">
-                                    <i class="fa-solid fa-file-arrow-down"></i>
-                                    <span>Xuất Excel</span>
-                                </button>
-                                <button onclick="openProductModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-medium shadow flex items-center space-x-2">
-                                    <i class="fa-solid fa-plus"></i>
-                                    <span>Thêm Sản Phẩm</span>
-                                </button>
+                                <h2 id="lblCompanyName" class="text-lg font-bold text-red-600 uppercase">CÔNG TY TNHH NHỰA VIỆT NHẬT</h2>
+                                <p id="lblCompanyAddress" class="text-xs text-gray-600 mt-0.5">Địa chỉ: 66/94 Bình Thành, Phường Bình Tân, TP Hồ Chí Minh, Việt Nam</p>
+                                <p id="lblCompanyMST" class="text-xs text-gray-600 mt-0.5">Mã số thuế: 0312069254</p>
+                                <p class="text-xs text-gray-600 mt-0.5">Hotline: <span id="lblCompanyHotline">0915 873 488</span> | Email: <span id="lblCompanyEmail">vnkd07.vietnhatgroup@gmail.com</span></p>
                             </div>
                         </div>
+                        <div class="text-right">
+                            <h2 class="text-2xl font-black text-slate-800 tracking-wide">BẢNG BÁO GIÁ</h2>
+                            <p class="text-xs text-gray-500 mt-1">Ngày: <span id="currentDateDisplay"></span></p>
+                        </div>
+                    </div>
 
+                    <!-- Thông tin khách hàng & NVBH -->
+                    <div class="mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2 text-xs text-gray-700">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><strong>Kính gửi khách hàng:</strong> <span id="qCustName" class="font-medium text-slate-950">...</span></div>
+                            <div><strong>Địa chỉ:</strong> <span id="qCustAddress" class="text-slate-800">...</span></div>
+                            <div><strong>Mã số thuế:</strong> <span id="qCustMST">...</span></div>
+                            <div><strong>Liên hệ / SĐT:</strong> <span id="qCustContact">...</span></div>
+                            <div class="col-span-2 pt-2 border-t border-slate-200"><strong>NVBH:</strong> <span id="qSalesName" class="text-slate-900 font-medium">...</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách sản phẩm trong báo giá -->
+                    <div class="mb-6">
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs">
+                            <table class="w-full border-collapse border border-gray-300 text-xs">
                                 <thead>
-                                    <tr class="bg-slate-100 text-slate-700">
-                                        <th class="p-3 border">STT</th>
-                                        <th class="p-3 border">Hình ảnh</th>
-                                        <th class="p-3 border">Mã sản phẩm</th>
-                                        <th class="p-3 border">Thông số sản phẩm</th>
-                                        <th class="p-3 border">Màu sắc</th>
-                                        <th class="p-3 border text-right">Đơn giá (VNĐ)</th>
-                                        <th class="p-3 border text-center">Thao tác</th>
+                                    <tr class="bg-slate-100 text-gray-700 text-center">
+                                        <th class="border border-gray-300 p-2 w-10">STT</th>
+                                        <th class="border border-gray-300 p-2 w-20">Hình ảnh</th>
+                                        <th class="border border-gray-300 p-2 w-24">Mã SP</th>
+                                        <th class="border border-gray-300 p-2">Thông số sản phẩm</th>
+                                        <th id="colHeaderColor" class="border border-gray-300 p-2 w-24">Màu sắc</th>
+                                        <th class="border border-gray-300 p-2 w-16">Số lượng</th>
+                                        <th class="border border-gray-300 p-2 w-24">Đơn giá (VNĐ)</th>
+                                        <th class="border border-gray-300 p-2 w-28">Thành tiền (VNĐ)</th>
+                                        <th class="border border-gray-300 p-2 w-10 no-print">Xóa</th>
                                     </tr>
                                 </thead>
-                                <tbody id="productTableBody">
-                                    <!-- Rendered dynamically -->
+                                <tbody id="quoteItemsTableBody">
+                                    <!-- Dữ liệu sản phẩm thêm vào -->
                                 </tbody>
                             </table>
                         </div>
+                        <p class="text-[11px] text-gray-500 italic mt-2">* Màu sắc sản phẩm thực tế có thể khác so với hiển thị trên màn hình của quý khách.</p>
+                        <p class="text-[11px] text-gray-500 mt-0.5">** Đơn giá trên chỉ áp dụng cho số lượng và địa chỉ giao hàng như trên báo giá.</p>
                     </div>
-                </div>
 
-                <!-- TAB 3: QUẢN LÝ KHÁCH HÀNG & TRA CỨU MST -->
-                <div id="view-customers" class="hidden space-y-6">
-                    <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
-                        <div class="flex justify-between items-center mb-6">
-                            <div>
-                                <h2 class="text-lg font-bold text-slate-800">Quản Lý Khách Hàng & Tra Cứu MST</h2>
-                                <p class="text-xs text-gray-500">Tra cứu thông tin doanh nghiệp tự động qua mã số thuế hoặc thêm thủ công.</p>
+                    <!-- Tổng tiền & VAT -->
+                    <div class="flex justify-end mb-6">
+                        <div class="w-80 space-y-2 text-xs">
+                            <div class="flex justify-between py-1 border-b">
+                                <span class="font-medium text-gray-600">Tiền hàng:</span>
+                                <span id="subTotalDisplay" class="font-bold">0</span>
                             </div>
-                            <button onclick="openCustomerModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-medium shadow flex items-center space-x-2">
-                                <i class="fa-solid fa-user-plus"></i>
-                                    <span>Thêm Khách Hàng Mới</span>
-                            </button>
-                        </div>
-
-                        <!-- Card tra cứu nhanh MST -->
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 flex items-center space-x-4">
-                            <div class="flex-1">
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Tra cứu thông tin qua Mã số thuế (API):</label>
-                                <div class="flex space-x-2">
-                                    <input type="text" id="lookupTaxCode" placeholder="Nhập mã số thuế công ty..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500">
-                                    <button onclick="lookupTaxAPI()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center space-x-2">
-                                        <i class="fa-solid fa-magnifying-glass"></i>
-                                        <span>Tra Cứu</span>
-                                    </button>
-                                </div>
+                            <div class="flex justify-between items-center py-1 border-b">
+                                <span class="font-medium text-gray-600">Thuế VAT (<span id="vatLabelPrint">8%</span>):</span>
+                                <span id="vatAmountDisplay" class="font-bold">0</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-gray-800 text-sm font-bold bg-slate-50 px-2 rounded">
+                                <span>TỔNG CỘNG SAU THUẾ VAT:</span>
+                                <span id="grandTotalDisplay" class="text-red-600">0</span>
                             </div>
                         </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs">
-                                <thead>
-                                    <tr class="bg-slate-100 text-slate-700">
-                                        <th class="p-3 border">STT</th>
-                                        <th class="p-3 border">Tên công ty</th>
-                                        <th class="p-3 border">Mã số thuế</th>
-                                        <th class="p-3 border">Địa chỉ</th>
-                                        <th class="p-3 border">Liên hệ / SĐT</th>
-                                        <th class="p-3 border text-center">Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="customerTableBody">
-                                    <!-- Rendered dynamically -->
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
-                </div>
 
-                <!-- TAB 4: THÔNG TIN NHÂN VIÊN (NVBH) -->
-                <div id="view-settings" class="hidden space-y-6">
-                    <div class="max-w-xl mx-auto bg-white rounded-xl shadow-md p-6 border border-slate-200">
-                        <h2 class="text-lg font-bold text-slate-800 mb-2">Thông Tin Nhân Viên Bán Hàng (NVBH)</h2>
-                        <p class="text-xs text-gray-500 mb-6">Cập nhật thông tin liên hệ hiển thị trên bảng báo giá.</p>
+                    <!-- Điều khoản & Quy định -->
+                    <div class="border-t pt-4 text-xs space-y-3 text-gray-700">
+                        <div><strong>Bằng chữ:</strong> <span id="amountInWordsDisplay" class="italic font-medium">Không đồng</span></div>
                         
-                        <div class="space-y-4 text-xs">
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">Họ và tên NVBH:</label>
-                                <input type="text" id="inputSalesName" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="Ví dụ: Vô Lê Quốc Cường">
-                            </div>
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">Hotline liên hệ:</label>
-                                <input type="text" id="inputSalesHotline" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="0915 873 488">
-                            </div>
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">Email liên hệ:</label>
-                                <input type="text" id="inputSalesEmail" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="vnkd07.vietnhatgroup@gmail.com">
-                            </div>
-                            <button onclick="saveSalesInfo()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg text-sm font-medium shadow transition">
-                                Lưu Thông Tin NVBH
-                            </button>
+                        <div>1. Giá trên <span class="font-medium" id="termVatPrint">Đã bao gồm thuế VAT 8%</span>, <span class="font-medium" id="termShippingPrint">Chi phí Vận Chuyển đã bao gồm</span>. Không bao gồm các chi phí phát sinh khác (nếu có).</div>
+
+                        <div id="deliveryDescText" class="font-medium">2. Hình thức giao hàng: Giao hàng tại kho: Kho Công Ty</div>
+
+                        <div>
+                            3. Hình thức thanh toán: <span id="bankInfoPrint" class="font-medium text-slate-800">...</span>
+                        </div>
+
+                        <div>4. Thời gian giao hàng: từ <span id="termTimeFromPrint" class="font-medium">1-2</span> đến <span id="termTimeToPrint" class="font-medium">3-5</span> ngày kể từ khi Việt Nhật nhận được xác nhận đặt hàng và thanh toán đơn hàng.</div>
+
+                        <div>5. Báo giá có giá trị <span id="termValidityDaysPrint" class="font-medium">15</span> ngày kể từ ngày gửi báo giá.</div>
+
+                        <!-- Điều khoản 6 (Chỉ hiển thị cho Công Nghiệp Việt Nhật) -->
+                        <div id="clause6Box" class="hidden bg-amber-50 p-3 rounded border border-amber-200">
+                            <span class="font-semibold text-amber-900">6. Bảo hành:</span> Bên bán bảo hành tận nơi trong vòng bán kính 40km, đổi miễn phí linh kiện với các lỗi về chất lượng sản phẩm trong thời hạn 12 tháng, riêng bánh xe bảo hành 3 tháng kể từ ngày ký biên bản giao nhận và nghiệm thu hàng hoá. Bên bán không chịu trách nhiệm bảo hành với những lỗi hỏng hóc do người sử dụng gây nên và các lỗi khách quan khác do môi trường sử dụng.
                         </div>
                     </div>
-                </div>
 
+                    <!-- Xác nhận & Chữ ký -->
+                    <div class="mt-8 pt-4 border-t text-center text-xs">
+                        <p class="italic font-medium text-slate-600 mb-6">Nếu có nhu cầu đặt hàng, Quý khách vui lòng xác nhận và gửi lại bảng báo giá này xem như đặt hàng chính thức.</p>
+                        <div class="grid grid-cols-2 gap-8 font-bold">
+                            <div>
+                                <p class="uppercase text-sm">XÁC NHẬN ĐẶT HÀNG</p>
+                                <p class="text-[11px] font-normal text-gray-500 mt-1">(Ký, ghi rõ họ tên)</p>
+                                <div class="h-20"></div>
+                            </div>
+                            <div>
+                                <p class="uppercase text-sm" id="signCompanyName">TM. CÔNG TY TNHH NHỰA VIỆT NHẬT</p>
+                                <p class="text-[11px] font-normal text-gray-500 mt-1">(Ký, đóng dấu)</p>
+                                <div class="h-20"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- MODAL THÊM/SỬA SẢN PHẨM -->
+    <!-- MODAL QUẢN LÝ SẢN PHẨM -->
     <div id="productModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl">
-            <h3 id="productModalTitle" class="text-base font-bold text-slate-800 mb-4">Thêm Sản Phẩm Mới</h3>
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold text-slate-800">Quản Lý Danh Mục Sản Phẩm</h3>
+                <button onclick="closeProductModal()" class="text-gray-500 hover:text-gray-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="flex justify-end mb-3 space-x-2">
+                <button onclick="openProductEditForm()" class="bg-red-600 text-white px-3 py-1.5 rounded text-xs"><i class="fa-solid fa-plus"></i> Thêm sản phẩm mới</button>
+            </div>
+            <div class="flex-1 overflow-y-auto border rounded mb-4">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="bg-slate-100 sticky top-0">
+                            <th class="p-2 border">Mã SP</th>
+                            <th class="p-2 border">Thông số</th>
+                            <th class="p-2 border">Đơn giá</th>
+                            <th class="p-2 border text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productManagementTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM/SỬA CHI TIẾT 1 SẢN PHẨM -->
+    <div id="productEditModal" class="fixed inset-0 bg-black/50 z-60 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <h3 id="prodEditModalTitle" class="text-sm font-bold text-slate-800 mb-3">Thêm/Sửa Sản Phẩm</h3>
             <form id="productForm" onsubmit="saveProduct(event)" class="space-y-3 text-xs">
-                <input type="hidden" id="prodEditIndex" value="">
+                <input type="hidden" id="prodEditIndex">
                 <div>
                     <label class="block font-semibold mb-1">Mã sản phẩm:</label>
-                    <input type="text" id="prodCode" required class="w-full border rounded p-2 text-sm">
+                    <input type="text" id="prodCode" required class="w-full border rounded p-1.5 text-xs">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1">Thông số sản phẩm:</label>
-                    <textarea id="prodSpecs" rows="3" required class="w-full border rounded p-2 text-sm" placeholder="Tên sản phẩm, kích thước, chất liệu..."></textarea>
+                    <textarea id="prodSpecs" rows="3" required class="w-full border rounded p-1.5 text-xs"></textarea>
                 </div>
                 <div>
                     <label class="block font-semibold mb-1">Màu sắc mặc định:</label>
-                    <input type="text" id="prodColor" class="w-full border rounded p-2 text-sm" placeholder="XANH DƯƠNG">
+                    <input type="text" id="prodColor" class="w-full border rounded p-1.5 text-xs">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1">Đơn giá (VNĐ):</label>
-                    <input type="number" id="prodPrice" required class="w-full border rounded p-2 text-sm" value="0">
+                    <input type="number" id="prodPrice" required class="w-full border rounded p-1.5 text-xs">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1">Link hình ảnh:</label>
-                    <input type="text" id="prodImage" class="w-full border rounded p-2 text-sm" placeholder="URL hình ảnh sản phẩm">
+                    <input type="text" id="prodImage" class="w-full border rounded p-1.5 text-xs">
                 </div>
-                <div class="flex justify-end space-x-2 pt-4">
-                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded font-medium">Hủy</button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium">Lưu sản phẩm</button>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeProductEditForm()" class="px-3 py-1.5 bg-gray-200 rounded">Hủy</button>
+                    <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded">Lưu</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL THÊM/SỬA KHÁCH HÀNG -->
+    <!-- MODAL THÊM KHÁCH HÀNG -->
     <div id="customerModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl">
-            <h3 id="customerModalTitle" class="text-base font-bold text-slate-800 mb-4">Thêm Khách Hàng Mới</h3>
-            <form id="customerForm" onsubmit="saveCustomer(event)" class="space-y-3 text-xs">
-                <input type="hidden" id="custEditIndex" value="">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="text-base font-bold text-slate-800 mb-4">Thêm Khách Hàng Mới</h3>
+            <form onsubmit="saveCustomer(event)" class="space-y-3 text-xs">
                 <div>
                     <label class="block font-semibold mb-1">Tên công ty / Khách hàng:</label>
-                    <input type="text" id="custName" required class="w-full border rounded p-2 text-sm">
+                    <input type="text" id="custName" required class="w-full border rounded p-1.5 text-xs">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1">Mã số thuế:</label>
-                    <input type="text" id="custMST" class="w-full border rounded p-2 text-sm">
+                    <input type="text" id="custMST" class="w-full border rounded p-1.5 text-xs">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1">Địa chỉ:</label>
-                    <input type="text" id="custAddress" required class="w-full border rounded p-2 text-sm">
+                    <input type="text" id="custAddress" required class="w-full border rounded p-1.5 text-xs">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1">Liên hệ / SĐT:</label>
-                    <input type="text" id="custContact" class="w-full border rounded p-2 text-sm">
+                    <input type="text" id="custContact" class="w-full border rounded p-1.5 text-xs">
                 </div>
                 <div class="flex justify-end space-x-2 pt-4">
-                    <button type="button" onclick="closeCustomerModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded font-medium">Hủy</button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium">Lưu khách hàng</button>
+                    <button type="button" onclick="closeCustomerModal()" class="px-3 py-1.5 bg-gray-200 rounded">Hủy</button>
+                    <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded">Lưu khách hàng</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL CHỌN NHIỀU SẢN PHẨM TỪ DANH MỤC -->
+    <!-- MODAL CHỌN SẢN PHẨM VÀO BÁO GIÁ -->
     <div id="productSelectorModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-3xl w-full p-6 shadow-2xl max-h-[80vh] flex flex-col">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl max-h-[80vh] flex flex-col">
             <h3 class="text-base font-bold text-slate-800 mb-4">Chọn Sản Phẩm Vào Báo Giá</h3>
             <div class="flex-1 overflow-y-auto mb-4 border rounded">
                 <table class="w-full text-left text-xs">
@@ -490,24 +396,21 @@
                         <tr class="bg-slate-100 sticky top-0">
                             <th class="p-2 border w-10 text-center"><input type="checkbox" id="selectAllProducts" onclick="toggleSelectAllProducts(this)"></th>
                             <th class="p-2 border">Mã SP</th>
-                            <th class="p-2 border">Thông số sản phẩm</th>
-                            <th class="p-2 border">Đơn giá (VNĐ)</th>
+                            <th class="p-2 border">Thông số</th>
+                            <th class="p-2 border">Đơn giá</th>
                         </tr>
                     </thead>
-                    <tbody id="productSelectorTableBody">
-                        <!-- Populated by JS -->
-                    </tbody>
+                    <tbody id="productSelectorTableBody"></tbody>
                 </table>
             </div>
             <div class="flex justify-end space-x-2">
-                <button type="button" onclick="closeProductSelectorModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-xs font-medium">Hủy</button>
-                <button type="button" onclick="addSelectedProductsToQuote()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium">Thêm vào báo giá</button>
+                <button type="button" onclick="closeProductSelectorModal()" class="px-3 py-1.5 bg-gray-200 rounded text-xs">Hủy</button>
+                <button type="button" onclick="addSelectedProductsToQuote()" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs">Thêm vào báo giá</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Data Store & State
         let currentCompany = 'nhua';
         
         let companyData = {
@@ -539,8 +442,8 @@
 
         let products = [
             { code: "VN01-HL", specs: "Sóng nhựa hở\n- Kích thước: 370*370*90mm (±10mm)\n- Chất liệu: HDPE nguyên sinh", color: "XANH DƯƠNG", price: 152000, image: "" },
-            { code: "VN05-HL", specs: "Sóng nhựa hở\n- Kích thước: 715*485*330mm (±10mm)\n- Chất liệu: HDPE nguyên sinh\n- Trọng lượng: 2400g (±10g)", color: "XANH DƯƠNG", price: 24000, image: "" },
-            { code: "BM25LL", specs: "Mã sản phẩm: BM25LL | Càng rộng\nThương hiệu: Bishamon\nTải trọng nâng: 2500kg\nChiều cao nâng thấp nhất: 80mm\nChiều cao nâng cao nhất: 200mm", color: "ĐỎ", price: 3500000, image: "" }
+            { code: "VN05-HL", specs: "Sóng nhựa hở\n- Kích thước: 715*485*330mm (±10mm)\n- Chất liệu: HDPE nguyên sinh", color: "XANH DƯƠNG", price: 24000, image: "" },
+            { code: "BM25LL", specs: "Mã sản phẩm: BM25LL | Càng rộng\nThương hiệu: Bishamon\nTải trọng nâng: 2500kg", color: "ĐỎ", price: 3500000, image: "" }
         ];
 
         let customers = [
@@ -548,41 +451,18 @@
         ];
 
         let quoteItems = [
-            { code: "VN01-HL", specs: "Sóng nhựa hở\n- Kích thước: 370*370*90mm (±10mm)\n- Chất liệu: HDPE nguyên sinh", color: "XANH DƯƠNG", qty: 1000, price: 152000, image: "" },
-            { code: "VN05-HL", specs: "Sóng nhựa hở\n- Kích thước: 715*485*330mm (±10mm)\n- Chất liệu: HDPE nguyên sinh", color: "XANH DƯƠNG", qty: 3200, price: 24000, image: "" }
+            { code: "VN01-HL", specs: "Sóng nhựa hở\n- Kích thước: 370*370*90mm (±10mm)", color: "XANH DƯƠNG", qty: 1000, price: 152000, image: "" },
+            { code: "VN05-HL", specs: "Sóng nhựa hở\n- Kích thước: 715*485*330mm (±10mm)", color: "XANH DƯƠNG", qty: 3200, price: 24000, image: "" }
         ];
 
-        // Init on load
         window.onload = function() {
             document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('vi-VN');
             loadSalesInfoToForm();
-            renderProductsTable();
-            renderCustomersTable();
             populateCustomerSelectForQuote();
             updateCompanyUI();
+            updateTerms();
         };
 
-        // Tab Switching
-        function switchTab(tabId) {
-            ['quote', 'products', 'customers', 'settings'].forEach(t => {
-                document.getElementById(`view-${t}`).classList.add('hidden');
-                document.getElementById(`tab-${t}`).classList.remove('bg-red-600', 'text-white', 'shadow-lg');
-                document.getElementById(`tab-${t}`).classList.add('text-slate-300', 'hover:bg-slate-800');
-            });
-            document.getElementById(`view-${tabId}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabId}`).classList.add('bg-red-600', 'text-white', 'shadow-lg');
-            document.getElementById(`tab-${tabId}`).classList.remove('text-slate-300', 'hover:bg-slate-800');
-
-            const titles = {
-                'quote': 'Tạo Báo Giá Đơn Hàng',
-                'products': 'Quản Lý Danh Mục Sản Phẩm',
-                'customers': 'Quản Lý Khách Hàng',
-                'settings': 'Cài Đặt Thông Tin Nhân Viên'
-            };
-            document.getElementById('currentViewTitle').innerText = titles[tabId];
-        }
-
-        // Company Switcher
         function switchCompany() {
             currentCompany = document.getElementById('companySelect').value;
             updateCompanyUI();
@@ -595,29 +475,17 @@
             document.getElementById('lblCompanyMST').innerText = "MST: " + data.mst;
             document.getElementById('signCompanyName').innerText = "TM. " + data.name;
 
-            // Bank info update in terms
-            togglePayType();
-
-            // Color column toggle
-            const colHeaderColor = document.getElementById('colHeaderColor');
             const clause6Box = document.getElementById('clause6Box');
-
-            if (data.hasColor) {
-                colHeaderColor.classList.remove('hidden');
-            } else {
-                colHeaderColor.classList.add('hidden');
-            }
-
             if (data.hasWarranty) {
                 clause6Box.classList.remove('hidden');
             } else {
                 clause6Box.classList.add('hidden');
             }
 
+            togglePayType();
             renderQuoteItemsTable();
         }
 
-        // Sales Info
         function loadSalesInfoToForm() {
             document.getElementById('inputSalesName').value = salesInfo.name;
             document.getElementById('inputSalesHotline').value = salesInfo.hotline;
@@ -630,7 +498,6 @@
             salesInfo.hotline = document.getElementById('inputSalesHotline').value;
             salesInfo.email = document.getElementById('inputSalesEmail').value;
             updateSalesDisplay();
-            alert("Đã lưu thông tin nhân viên thành công!");
         }
 
         function updateSalesDisplay() {
@@ -639,12 +506,11 @@
             document.getElementById('qSalesName').innerText = salesInfo.name;
         }
 
-        // Customer & Tax API
         function populateCustomerSelectForQuote() {
             const select = document.getElementById('quoteCustomerSelect');
-            select.innerHTML = '<option value="">-- Chọn khách hàng từ danh bạ --</option>';
+            select.innerHTML = '<option value="">-- Chọn khách hàng --</option>';
             customers.forEach((c, idx) => {
-                select.innerHTML += `<option value="${idx}">${c.name} (${c.mst || 'Không MST'})</option>`;
+                select.innerHTML += `<option value="${idx}">${c.name}</option>`;
             });
         }
 
@@ -661,108 +527,55 @@
                 document.getElementById('qCustAddress').innerText = c.address;
                 document.getElementById('qCustMST').innerText = c.mst || "N/A";
                 document.getElementById('qCustContact').innerText = c.contact || "N/A";
-                // Update default delivery address term if delivery type is address
-                updateTerms();
+                toggleDeliveryType();
             }
         }
 
-        async function lookupTaxAPI() {
-            const taxCode = document.getElementById('lookupTaxCode').value.trim();
-            if (!taxCode) {
-                alert("Vui lòng nhập mã số thuế cần tra cứu!");
-                return;
-            }
-            try {
-                let res = await fetch(`https://api.xinvoice.vn/gdt-api/tax-payer/${taxCode}`);
-                let data = await res.json();
-                if (data && (data.name || data.data)) {
-                    let info = data.data || data;
-                    document.getElementById('custName').value = info.name || info.tinName || "";
-                    document.getElementById('custMST').value = taxCode;
-                    document.getElementById('custAddress').value = info.address || info.headOffice || "";
-                    alert("Tra cứu thông tin thuế thành công!");
-                } else {
-                    alert("Không tìm thấy thông tin doanh nghiệp với MST này. Vui lòng nhập thủ công.");
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Lỗi kết nối API tra cứu thuế. Vui lòng nhập thông tin thủ công.");
-            }
-        }
-
-        // Customer Modal
-        function openCustomerModal(idx = null) {
-            document.getElementById('customerModal').classList.remove('hidden');
-            if (idx !== null) {
-                document.getElementById('customerModalTitle').innerText = "Sửa Thông Tin Khách Hàng";
-                document.getElementById('custEditIndex').value = idx;
-                const c = customers[idx];
-                document.getElementById('custName').value = c.name;
-                document.getElementById('custMST').value = c.mst;
-                document.getElementById('custAddress').value = c.address;
-                document.getElementById('custContact').value = c.contact;
-            } else {
-                document.getElementById('customerModalTitle').innerText = "Thêm Khách Hàng Mới";
-                document.getElementById('custEditIndex').value = "";
-                document.getElementById('customerForm').reset();
-            }
-        }
-        function closeCustomerModal() {
-            document.getElementById('customerModal').classList.add('hidden');
-        }
+        function openCustomerModal() { document.getElementById('customerModal').classList.remove('hidden'); }
+        function closeCustomerModal() { document.getElementById('customerModal').classList.add('hidden'); }
 
         function saveCustomer(e) {
             e.preventDefault();
-            const idx = document.getElementById('custEditIndex').value;
             const newCust = {
                 name: document.getElementById('custName').value,
                 mst: document.getElementById('custMST').value,
                 address: document.getElementById('custAddress').value,
                 contact: document.getElementById('custContact').value
             };
-            if (idx === "") {
-                customers.push(newCust);
-            } else {
-                customers[idx] = newCust;
-            }
+            customers.push(newCust);
             closeCustomerModal();
-            renderCustomersTable();
             populateCustomerSelectForQuote();
+            document.getElementById('quoteCustomerSelect').value = customers.length - 1;
+            selectCustomerForQuote();
         }
 
-        function deleteCustomer(idx) {
-            if (confirm("Bạn có chắc chắn muốn xóa khách hàng này?")) {
-                customers.splice(idx, 1);
-                renderCustomersTable();
-                populateCustomerSelectForQuote();
-            }
+        function openProductModal() {
+            renderProductManagementTable();
+            document.getElementById('productModal').classList.remove('hidden');
         }
+        function closeProductModal() { document.getElementById('productModal').classList.add('hidden'); }
 
-        function renderCustomersTable() {
-            const tbody = document.getElementById('customerTableBody');
+        function renderProductManagementTable() {
+            const tbody = document.getElementById('productManagementTableBody');
             tbody.innerHTML = "";
-            customers.forEach((c, idx) => {
+            products.forEach((p, idx) => {
                 tbody.innerHTML += `
-                    <tr class="border-b hover:bg-slate-50">
-                        <td class="p-3 border text-center">${idx + 1}</td>
-                        <td class="p-3 border font-semibold">${c.name}</td>
-                        <td class="p-3 border">${c.mst || ''}</td>
-                        <td class="p-3 border">${c.address}</td>
-                        <td class="p-3 border">${c.contact || ''}</td>
-                        <td class="p-3 border text-center space-x-2">
-                            <button onclick="openCustomerModal(${idx})" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="deleteCustomer(${idx})" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                    <tr class="border-b">
+                        <td class="p-2 border font-semibold">${p.code}</td>
+                        <td class="p-2 border whitespace-pre-line">${p.specs}</td>
+                        <td class="p-2 border text-right">${p.price.toLocaleString('vi-VN')}</td>
+                        <td class="p-2 border text-center space-x-2">
+                            <button onclick="openProductEditForm(${idx})" class="text-blue-600"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteProduct(${idx})" class="text-red-600"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        // Product Management
-        function openProductModal(idx = null) {
-            document.getElementById('productModal').classList.remove('hidden');
+        function openProductEditForm(idx = null) {
+            document.getElementById('productEditModal').classList.remove('hidden');
             if (idx !== null) {
-                document.getElementById('productModalTitle').innerText = "Sửa Thông Tin Sản Phẩm";
                 document.getElementById('prodEditIndex').value = idx;
                 const p = products[idx];
                 document.getElementById('prodCode').value = p.code;
@@ -771,110 +584,39 @@
                 document.getElementById('prodPrice').value = p.price;
                 document.getElementById('prodImage').value = p.image;
             } else {
-                document.getElementById('productModalTitle').innerText = "Thêm Sản Phẩm Mới";
                 document.getElementById('prodEditIndex').value = "";
                 document.getElementById('productForm').reset();
             }
         }
-        function closeProductModal() {
-            document.getElementById('productModal').classList.add('hidden');
-        }
+        function closeProductEditForm() { document.getElementById('productEditModal').classList.add('hidden'); }
 
         function saveProduct(e) {
             e.preventDefault();
             const idx = document.getElementById('prodEditIndex').value;
-            const newProd = {
+            const pData = {
                 code: document.getElementById('prodCode').value,
                 specs: document.getElementById('prodSpecs').value,
                 color: document.getElementById('prodColor').value,
                 price: parseFloat(document.getElementById('prodPrice').value) || 0,
                 image: document.getElementById('prodImage').value
             };
-            if (idx === "") {
-                products.push(newProd);
-            } else {
-                products[idx] = newProd;
-            }
-            closeProductModal();
-            renderProductsTable();
+            if (idx === "") products.push(pData);
+            else products[idx] = pData;
+            closeProductEditForm();
+            renderProductManagementTable();
         }
 
         function deleteProduct(idx) {
-            if (confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
-                products.splice(idx, 1);
-                renderProductsTable();
-            }
+            products.splice(idx, 1);
+            renderProductManagementTable();
         }
 
-        function renderProductsTable() {
-            const tbody = document.getElementById('productTableBody');
-            tbody.innerHTML = "";
-            products.forEach((p, idx) => {
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-slate-50">
-                        <td class="p-3 border text-center">${idx + 1}</td>
-                        <td class="p-3 border text-center">
-                            ${p.image ? `<img src="${p.image}" class="w-12 h-12 object-cover mx-auto rounded">` : '<span class="text-gray-400 text-[10px]">Không có</span>'}
-                        </td>
-                        <td class="p-3 border font-semibold">${p.code}</td>
-                        <td class="p-3 border whitespace-pre-line">${p.specs}</td>
-                        <td class="p-3 border">${p.color || ''}</td>
-                        <td class="p-3 border text-right font-medium">${p.price.toLocaleString('vi-VN')}</td>
-                        <td class="p-3 border text-center space-x-2">
-                            <button onclick="openProductModal(${idx})" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="deleteProduct(${idx})" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        // Excel Import / Export for Products
-        function exportExcel() {
-            let dataToExport = products.map((p, i) => ({
-                "STT": i + 1,
-                "Mã sản phẩm": p.code,
-                "Thông số sản phẩm": p.specs,
-                "Màu sắc": p.color,
-                "Đơn giá": p.price,
-                "Hình ảnh": p.image
-            }));
-            let ws = XLSX.utils.json_to_sheet(dataToExport);
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "DanhSachSanPham");
-            XLSX.writeFile(wb, "DanhSachSanPham_VietNhat.xlsx");
-        }
-
-        function importExcel(e) {
-            let file = e.target.files[0];
-            if (!file) return;
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                let data = new Uint8Array(e.target.result);
-                let workbook = XLSX.read(data, {type: 'array'});
-                let firstSheet = workbook.SheetNames[0];
-                let rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
-                
-                products = rows.map(r => ({
-                    code: r["Mã sản phẩm"] || r["code"] || "",
-                    specs: r["Thông số sản phẩm"] || r["specs"] || "",
-                    color: r["Màu sắc"] || r["color"] || "",
-                    price: parseFloat(r["Đơn giá"] || r["price"] || 0),
-                    image: r["Hình ảnh"] || r["image"] || ""
-                }));
-                renderProductsTable();
-                alert("Nhập file Excel thành công!");
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        // Product Selector Modal for Quote
         function openProductSelectorModal() {
             const tbody = document.getElementById('productSelectorTableBody');
             tbody.innerHTML = "";
             products.forEach((p, idx) => {
                 tbody.innerHTML += `
-                    <tr class="border-b hover:bg-slate-50">
+                    <tr class="border-b">
                         <td class="p-2 border text-center"><input type="checkbox" class="product-checkbox" value="${idx}"></td>
                         <td class="p-2 border font-semibold">${p.code}</td>
                         <td class="p-2 border whitespace-pre-line">${p.specs}</td>
@@ -884,33 +626,19 @@
             });
             document.getElementById('productSelectorModal').classList.remove('hidden');
         }
-
-        function closeProductSelectorModal() {
-            document.getElementById('productSelectorModal').classList.add('hidden');
-        }
-
+        function closeProductSelectorModal() { document.getElementById('productSelectorModal').classList.add('hidden'); }
         function toggleSelectAllProducts(master) {
             document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = master.checked);
         }
-
         function addSelectedProductsToQuote() {
-            const checkboxes = document.querySelectorAll('.product-checkbox:checked');
-            checkboxes.forEach(cb => {
+            document.querySelectorAll('.product-checkbox:checked').forEach(cb => {
                 const p = products[cb.value];
-                quoteItems.push({
-                    code: p.code,
-                    specs: p.specs,
-                    color: p.color,
-                    qty: 1,
-                    price: p.price,
-                    image: p.image
-                });
+                quoteItems.push({ code: p.code, specs: p.specs, color: p.color, qty: 1, price: p.price, image: p.image });
             });
             closeProductSelectorModal();
             renderQuoteItemsTable();
         }
 
-        // Quote Management & Calculations
         function renderQuoteItemsTable() {
             const tbody = document.getElementById('quoteItemsTableBody');
             tbody.innerHTML = "";
@@ -929,38 +657,28 @@
                             <input type="text" value="${item.color || ''}" onchange="updateQuoteItem(${idx}, 'color', this.value)" class="w-full border rounded px-1 py-0.5 text-xs">
                         </td>
                         <td class="border border-gray-300 p-2 text-center">
-                            <input type="number" min="0" value="${item.qty}" onchange="updateQuoteItem(${idx}, 'qty', this.value)" class="w-16 border rounded px-1 py-0.5 text-center text-xs">
+                            <input type="number" min="0" value="${item.qty}" onchange="updateQuoteItem(${idx}, 'qty', this.value)" class="w-16 border rounded px-1 text-center text-xs">
                         </td>
                         <td class="border border-gray-300 p-2 text-right">
-                            <input type="number" min="0" value="${item.price}" onchange="updateQuoteItem(${idx}, 'price', this.value)" class="w-24 border rounded px-1 py-0.5 text-right text-xs">
+                            <input type="number" min="0" value="${item.price}" onchange="updateQuoteItem(${idx}, 'price', this.value)" class="w-24 border rounded px-1 text-right text-xs">
                         </td>
                         <td class="border border-gray-300 p-2 text-right font-medium" id="itemTotal-${idx}">
                             ${(item.qty * item.price).toLocaleString('vi-VN')}
                         </td>
                         <td class="border border-gray-300 p-2 text-center no-print">
-                            <button onclick="removeQuoteItem(${idx})" class="text-red-600 hover:text-red-800"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="removeQuoteItem(${idx})" class="text-red-600"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
 
-            // Adjust table header for color column visibility
-            const colHeaderColor = document.getElementById('colHeaderColor');
-            if (hasColor) {
-                colHeaderColor.classList.remove('hidden');
-            } else {
-                colHeaderColor.classList.add('hidden');
-            }
-
+            document.getElementById('colHeaderColor').style.display = hasColor ? '' : 'none';
             calculateTotals();
         }
 
         function updateQuoteItem(idx, field, val) {
-            if (field === 'qty' || field === 'price') {
-                quoteItems[idx][field] = parseFloat(val) || 0;
-            } else {
-                quoteItems[idx][field] = val;
-            }
+            if (field === 'qty' || field === 'price') quoteItems[idx][field] = parseFloat(val) || 0;
+            else quoteItems[idx][field] = val;
             document.getElementById(`itemTotal-${idx}`).innerText = (quoteItems[idx].qty * quoteItems[idx].price).toLocaleString('vi-VN');
             calculateTotals();
         }
@@ -972,9 +690,7 @@
 
         function calculateTotals() {
             let subTotal = 0;
-            quoteItems.forEach(item => {
-                subTotal += (item.qty * item.price);
-            });
+            quoteItems.forEach(item => { subTotal += (item.qty * item.price); });
 
             const vatRate = parseFloat(document.getElementById('vatRateSelect').value) || 0;
             document.getElementById('vatLabelPrint').innerText = vatRate + '%';
@@ -985,17 +701,15 @@
             document.getElementById('subTotalDisplay').innerText = subTotal.toLocaleString('vi-VN') + " đ";
             document.getElementById('vatAmountDisplay').innerText = vatAmount.toLocaleString('vi-VN') + " đ";
             document.getElementById('grandTotalDisplay').innerText = grandTotal.toLocaleString('vi-VN') + " đ";
-
             document.getElementById('amountInWordsDisplay').innerText = numberToVietnameseWords(grandTotal) + " đồng.";
         }
 
-        // Terms updates
         function updateTerms() {
-            const vatVal = document.getElementById('termVat').value;
-            document.getElementById('termVatPrint').innerText = vatVal;
-
-            const shipVal = document.getElementById('termShipping').value;
-            document.getElementById('termShippingPrint').innerText = shipVal;
+            document.getElementById('termVatPrint').innerText = document.getElementById('termVat').value;
+            document.getElementById('termShippingPrint').innerText = document.getElementById('termShipping').value;
+            document.getElementById('termTimeFromPrint').innerText = document.getElementById('termTimeFrom').value;
+            document.getElementById('termTimeToPrint').innerText = document.getElementById('termTimeTo').value;
+            document.getElementById('termValidityDaysPrint').innerText = document.getElementById('termValidityDays').value;
         }
 
         function toggleDeliveryType() {
@@ -1003,28 +717,25 @@
             const desc = document.getElementById('deliveryDescText');
             if (type === 'kho') {
                 const whName = document.getElementById('warehouseName').value;
-                desc.innerText = `Giao hàng tại kho: ${whName}`;
+                desc.innerText = `2. Hình thức giao hàng: Giao hàng tại kho: ${whName}`;
             } else {
                 const custAddr = document.getElementById('qCustAddress').innerText;
-                desc.innerText = `Giao hàng đến địa chỉ khách hàng: ${custAddr}`;
+                desc.innerText = `2. Hình thức giao hàng: Giao đến địa chỉ khách hàng: ${custAddr}`;
             }
         }
 
         function togglePayType() {
             const type = document.querySelector('input[name="payType"]:checked').value;
-            const box = document.getElementById('bankInfoBox');
+            const printBox = document.getElementById('bankInfoPrint');
             const data = companyData[currentCompany];
 
             if (type === 'Chuyển khoản') {
-                box.classList.remove('hidden');
-                box.innerHTML = `${data.bank} - STK: <span class="font-bold text-red-600">${data.stk}</span>, Chủ tài khoản: ${data.name}`;
+                printBox.innerHTML = `${data.bank} - STK: <span class="font-bold text-red-600">${data.stk}</span>, Chủ tài khoản: ${data.name}`;
             } else {
-                box.classList.add('hidden');
-                box.innerHTML = `Thanh toán trực tiếp bằng Tiền mặt.`;
+                printBox.innerHTML = `Thanh toán trực tiếp bằng Tiền mặt.`;
             }
         }
 
-        // Number to Vietnamese words helper
         function numberToVietnameseWords(num) {
             if (num === 0) return "Không";
             const chuSo = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
