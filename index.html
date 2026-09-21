@@ -3,518 +3,429 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Báo Giá Cloud - Nhựa Việt Nhật</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS để đọc/xuất file Excel -->
+    <title>Phần Mềm Lập Báo Giá Chuyên Nghiệp</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS for Excel Import/Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .quote-box { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .table-input { width: 100%; border: none; background: transparent; text-align: center; }
+        .table-input:focus { outline: 1px solid #0d6efd; background: #fff; }
         @media print {
-            body * { visibility: hidden; }
-            #printableQuote, #printableQuote * { visibility: visible; }
-            #printableQuote { position: absolute; left: 0; top: 0; width: 100%; }
             .no-print { display: none !important; }
+            body { background: #fff; }
+            .quote-box { box-shadow: none; padding: 0; }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body>
 
-    <!-- Header -->
-    <header class="bg-blue-900 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <img src="Gemini_Generated_Image_unxaj9unxaj9unxa-removebg-preview.png" alt="Logo" class="h-9 w-auto bg-white rounded p-0.5 object-contain">
-                <h1 class="text-lg font-bold">BÁO GIÁ CLOUD - VIỆT NHẬT</h1>
-            </div>
-            <div id="userAuthSection" class="flex items-center gap-4">
-                <span id="userEmailDisplay" class="text-sm italic">Đang kiểm tra...</span>
-                <!-- Các nút hành động chính khi đã đăng nhập -->
-                <div id="actionButtons" class="hidden flex items-center gap-2">
-                    <button onclick="saveQuoteToCloud()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-semibold transition">💾 Lưu Báo Giá</button>
-                    <button onclick="exportQuoteExcel()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-semibold transition">📊 Xuất Excel</button>
-                    <button onclick="window.print()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm font-semibold transition">🖨️ In Báo Giá</button>
-                    <button onclick="handleLogout()" class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded text-sm transition">Đăng xuất</button>
-                </div>
+<div class="container my-5">
+    <!-- Thanh công cụ điều khiển -->
+    <div class="card mb-4 no-print shadow-sm">
+        <div class="card-body d-flex flex-wrap gap-2 justify-content-between align-items-center">
+            <h4 class="mb-0 text-primary"><i class="fa-solid fa-file-invoice-dollar"></i> Tạo Báo Giá</h4>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-success" onclick="exportToExcel()"><i class="fa-solid fa-file-excel"></i> Xuất Excel Sản Phẩm</button>
+                <label class="btn btn-info text-white mb-0">
+                    <i class="fa-solid fa-file-import"></i> Nhập Excel Sản Phẩm <input type="file" id="excelFile" hidden accept=".xlsx, .xls" onchange="importFromExcel(event)">
+                </label>
+                <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> In Báo Giá</button>
+                <button class="btn btn-primary" onclick="saveCustomerData()"><i class="fa-solid fa-floppy-disk"></i> Lưu Khách Hàng</button>
             </div>
         </div>
-    </header>
+    </div>
 
-    <main class="max-w-7xl mx-auto px-4 py-6">
-
-        <!-- KHUNG ĐĂNG NHẬP / ĐĂNG KÝ -->
-        <div id="authContainer" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-md mt-10">
-            <div class="flex justify-center mb-4">
-                <img src="Gemini_Generated_Image_unxaj9unxaj9unxa-removebg-preview.png" alt="Logo" class="h-16 w-auto object-contain">
+    <div class="quote-box">
+        <!-- HEADER: Chọn Công Ty Phát Hành & Nhân Viên Báo Giá -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Chọn Công Ty Phát Hành Báo Giá:</label>
+                <select class="form-select mb-2" id="companyIssuer" onchange="updateCompanyInfo()">
+                    <option value="nhua-viet-nhat">1. CÔNG TY TNHH NHỰA VIỆT NHẬT</option>
+                    <option value="cn-viet-nhat">2. CÔNG TY TNHH CÔNG NGHIỆP VIỆT NHẬT</option>
+                </select>
+                <div contenteditable="true" id="issuerDetails" class="p-2 border rounded bg-light" style="font-size: 14px;">
+                    <!-- Nội dung tự động điền qua JS -->
+                </div>
             </div>
-            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Đăng Nhập Hệ Thống</h2>
-            <form id="authForm" class="space-y-4" onsubmit="handleAuthSubmit(event)">
+            <div class="col-md-6 text-md-end">
+                <h3 class="text-uppercase fw-bold text-danger">BẢNG BÁO GIÁ</h3>
+                <div class="mb-2">
+                    <label class="fw-bold">Số báo giá:</label>
+                    <input type="text" id="quoteNumber" value="BG-2026/03" class="form-control d-inline-block w-50 text-end">
+                </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Email nhân viên</label>
-                    <input type="email" id="authEmail" required placeholder="nhanvien@vietnhat.com" class="mt-1 block w-full rounded-md border-gray-300 p-2.5 border">
+                    <label class="fw-bold">Ngày báo giá:</label>
+                    <input type="date" id="quoteDate" class="form-control d-inline-block w-50 text-end">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                    <input type="password" id="authPassword" required placeholder="••••••••" class="mt-1 block w-full rounded-md border-gray-300 p-2.5 border">
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-blue-600 text-white p-2.5 rounded-md hover:bg-blue-700 font-semibold">Đăng Nhập</button>
-                    <button type="button" onclick="handleRegister()" class="flex-1 bg-gray-600 text-white p-2.5 rounded-md hover:bg-gray-700 font-semibold">Đăng Ký</button>
-                </div>
-            </form>
-            <p id="authMessage" class="mt-4 text-center text-sm font-medium"></p>
-        </div>
-
-        <!-- KHUNG LÀM VIỆC CHÍNH (Đã đăng nhập) -->
-        <div id="appContainer" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- CỘT TRÁI: CÁC FORM NHẬP LIỆU & QUẢN LÝ (LG: 5 cột) -->
-            <div class="lg:col-span-5 space-y-6">
-                
-                <!-- 1. Thông tin Công ty & NV Bán hàng -->
-                <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
-                    <h2 class="text-md font-bold text-blue-900 border-b pb-2">1. Thông tin Công ty & NV Bán hàng</h2>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600">Công ty:</label>
-                        <select id="companyName" class="w-full border rounded p-2 text-sm mt-1">
-                            <option>CÔNG TY TNHH NHỰA VIỆT NHẬT</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600">Mã số thuế:</label>
-                        <input type="text" id="companyTax" value="0312069254" class="w-full border rounded p-2 text-sm mt-1">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600">Địa chỉ:</label>
-                        <textarea id="companyAddress" class="w-full border rounded p-2 text-sm mt-1" rows="2">66/94 Bình Thành, Phường Bình Tân, TP Hồ Chí Minh, Việt Nam</textarea>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600">Tên NV Bán hàng:</label>
-                            <input type="text" id="salesName" placeholder="Họ tên NV" class="w-full border rounded p-2 text-sm mt-1">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600">SĐT NV:</label>
-                            <input type="text" id="salesPhone" placeholder="Số điện thoại" class="w-full border rounded p-2 text-sm mt-1">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. Thông tin Khách hàng -->
-                <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
-                    <h2 class="text-md font-bold text-blue-900 border-b pb-2">2. Thông tin Khách hàng</h2>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600">Tên công ty khách hàng:</label>
-                        <input type="text" id="cusCompany" placeholder="Nhập tên công ty khách hàng" class="w-full border rounded p-2 text-sm mt-1">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600">Mã số thuế KH:</label>
-                            <input type="text" id="cusTax" placeholder="MST khách hàng" class="w-full border rounded p-2 text-sm mt-1">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600">Người liên hệ:</label>
-                            <input type="text" id="cusContact" placeholder="Tên người nhận" class="w-full border rounded p-2 text-sm mt-1">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600">Địa chỉ khách hàng:</label>
-                        <input type="text" id="cusAddress" placeholder="Địa chỉ giao hàng" class="w-full border rounded p-2 text-sm mt-1">
-                    </div>
-                </div>
-
-                <!-- 3. Quản lý Kho tổng & Chọn sản phẩm -->
-                <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <h2 class="text-md font-bold text-blue-900">3. Kho Tổng & Chọn Sản Phẩm</h2>
-                        <span id="productCountBadge" class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-semibold">0 sản phẩm</span>
-                    </div>
-
-                    <!-- Upload Excel vào kho tổng -->
-                    <div class="bg-gray-50 p-3 rounded-lg border">
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Upload file Excel danh mục cá nhân:</label>
-                        <div class="flex gap-2">
-                            <input type="file" id="excelFile" accept=".xlsx, .xls" class="block w-full text-xs text-gray-500 border rounded p-1 bg-white">
-                            <button onclick="uploadExcelToCloud()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap">Đồng bộ</button>
-                        </div>
-                        <p id="uploadStatus" class="mt-1 text-xs font-medium text-gray-600"></p>
-                    </div>
-
-                    <!-- Chọn sản phẩm đưa vào báo giá -->
-                    <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-gray-700">Chọn sản phẩm từ kho tổng:</label>
-                        <select id="productSelectDropdown" class="w-full border rounded p-2 text-sm bg-white">
-                            <option value="">-- Chọn sản phẩm --</option>
-                        </select>
-                        <div class="flex gap-2 items-center">
-                            <div class="w-1/3">
-                                <label class="block text-[10px] font-semibold text-gray-600">Số lượng:</label>
-                                <input type="number" id="itemQuantity" value="1" min="1" class="w-full border rounded p-1.5 text-sm">
-                            </div>
-                            <div class="w-2/3 pt-4">
-                                <button onclick="addProductToQuote()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded text-sm font-semibold">
-                                    + Thêm vào báo giá
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- CỘT PHẢI: XEM TRƯỚC BẢNG BÁO GIÁ (LG: 7 cột) -->
-            <div class="lg:col-span-7">
-                <div id="printableQuote" class="bg-white p-8 rounded-xl shadow-lg border space-y-6">
-                    
-                    <!-- Tiêu đề Bảng Báo Giá có kèm Logo -->
-                    <div class="flex justify-between items-start border-b pb-4">
-                        <div class="flex items-start gap-4">
-                            <img src="Gemini_Generated_Image_unxaj9unxaj9unxa-removebg-preview.png" alt="Logo VietNhat" class="h-16 w-auto object-contain mt-1">
-                            <div>
-                                <h2 id="previewCompanyName" class="text-xl font-bold text-blue-900">CÔNG TY TNHH NHỰA VIỆT NHẬT</h2>
-                                <p class="text-xs text-gray-600 mt-1">ĐC: <span id="previewCompanyAddress">66/94 Bình Thành, Phường Bình Tân, TP Hồ Chí Minh, Việt Nam</span></p>
-                                <p class="text-xs text-gray-600">MST: <span id="previewCompanyTax">0312069254</span></p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <h3 class="text-lg font-bold text-gray-800">BẢNG BÁO GIÁ</h3>
-                            <p class="text-xs text-gray-500 mt-1">Ngày: <span id="currentDate"></span></p>
-                        </div>
-                    </div>
-
-                    <!-- Thông tin khách hàng & Nhân viên -->
-                    <div class="grid grid-cols-2 gap-4 text-xs bg-gray-50 p-4 rounded-lg">
-                        <div class="space-y-1">
-                            <p class="font-bold text-gray-700">Kính gửi khách hàng:</p>
-                            <p><span id="previewCusCompany" class="font-semibold text-blue-800">[Chưa chọn khách hàng]</span></p>
-                            <p>MST: <span id="previewCusTax">...</span></p>
-                            <p>Địa chỉ: <span id="previewCusAddress">...</span></p>
-                            <p>Người liên hệ: <span id="previewCusContact">...</span></p>
-                        </div>
-                        <div class="space-y-1 text-right">
-                            <p class="font-bold text-gray-700">Đại diện bán hàng:</p>
-                            <p><span id="previewSalesName" class="font-semibold">[Chưa nhập tên NV]</span></p>
-                            <p>SĐT: <span id="previewSalesPhone">...</span></p>
-                        </div>
-                    </div>
-
-                    <!-- Bảng danh sách sản phẩm báo giá -->
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 border text-xs">
-                            <thead class="bg-gray-100">
-                                <tr>
-                                    <th class="px-2 py-2 text-center font-semibold text-gray-700 w-10">STT</th>
-                                    <th class="px-2 py-2 text-center font-semibold text-gray-700 w-14">Hình ảnh</th>
-                                    <th class="px-2 py-2 text-left font-semibold text-gray-700">Mã SP</th>
-                                    <th class="px-2 py-2 text-left font-semibold text-gray-700">Tên Sản Phẩm & Thông số</th>
-                                    <th class="px-2 py-2 text-left font-semibold text-gray-700">Màu sắc</th>
-                                    <th class="px-2 py-2 text-center font-semibold text-gray-700 w-12">SL</th>
-                                    <th class="px-2 py-2 text-right font-semibold text-gray-700">Đơn giá</th>
-                                    <th class="px-2 py-2 text-right font-semibold text-gray-700">Thành tiền</th>
-                                    <th class="px-2 py-2 text-center font-semibold text-gray-700 w-10 no-print">Xóa</th>
-                                </tr>
-                            </thead>
-                            <tbody id="quoteTableBody" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="9" class="px-4 py-6 text-center text-gray-400">Chưa có sản phẩm nào trong bảng báo giá.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Tổng cộng -->
-                    <div class="flex justify-end pt-2">
-                        <div class="w-64 space-y-1 text-xs">
-                            <div class="flex justify-between py-1 border-b">
-                                <span class="font-medium text-gray-600">Tổng tiền hàng:</span>
-                                <span id="subTotalAmount" class="font-bold">0 đ</span>
-                            </div>
-                            <div class="flex justify-between py-1 border-b">
-                                <span class="font-medium text-gray-600">Thuế VAT (8%):</span>
-                                <span id="vatAmount" class="font-bold">0 đ</span>
-                            </div>
-                            <div class="flex justify-between py-1 text-sm">
-                                <span class="font-bold text-blue-900">Tổng thanh toán:</span>
-                                <span id="grandTotalAmount" class="font-bold text-blue-900">0 đ</span>
-                            </div>
-                        </div>
-                    </div>
-
+                <div class="mt-2 text-muted" style="font-size: 13px;">
+                    <div><strong>Nhân viên báo giá:</strong> <span contenteditable="true">Nguyễn Văn A</span></div>
+                    <div><strong>Hotline:</strong> <span contenteditable="true">0909.123.456</span></div>
+                    <div><strong>Email:</strong> <span contenteditable="true">nhanvien@vietnhat.vn</span></div>
                 </div>
             </div>
-
         </div>
-    </main>
 
-    <!-- Firebase SDK & Script -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        <hr>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCzBAxV0U0NGTioQwt6rplNnSIGJFdAmFk",
-            authDomain: "baogiavietnhat.firebaseapp.com",
-            projectId: "baogiavietnhat",
-            storageBucket: "baogiavietnhat.firebasestorage.app",
-            messagingSenderId: "581658807792",
-            appId: "1:581658807792:web:e94c9538190703c5c76135",
-            measurementId: "G-6MGTKXBB1W"
-        };
+        <!-- THÔNG TIN KHÁCH HÀNG & TRA CỨU MST -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="text-secondary"><i class="fa-solid fa-user-tie"></i> Thông tin khách hàng</h5>
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label small fw-bold">Tra cứu nhanh bằng Mã số thuế:</label>
+                <div class="input-group">
+                    <input type="text" id="searchTaxCode" class="form-control" placeholder="Nhập mã số thuế...">
+                    <button class="btn btn-outline-primary" type="button" onclick="lookupTaxCode()"><i class="fa-solid fa-search"></i> Tra cứu</button>
+                </div>
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label small fw-bold">Tên đơn vị / Khách hàng:</label>
+                <input type="text" id="cusName" class="form-control" placeholder="Nhập tên công ty khách hàng...">
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label small fw-bold">Mã số thuế khách hàng:</label>
+                <input type="text" id="cusTaxCode" class="form-control" placeholder="Mã số thuế...">
+            </div>
+            <div class="col-md-8 mb-2">
+                <label class="form-label small fw-bold">Địa chỉ khách hàng:</label>
+                <input type="text" id="cusAddress" class="form-control" placeholder="Địa chỉ khách hàng...">
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label small fw-bold">Người nhận / Điện thoại:</label>
+                <input type="text" id="cusContact" class="form-control" placeholder="SĐT / Người liên hệ...">
+            </div>
+        </div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        let myMasterProducts = [];
-        let currentQuoteItems = [];
-
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('vi-VN');
-
-        ['companyName', 'companyTax', 'companyAddress', 'salesName', 'salesPhone', 'cusCompany', 'cusTax', 'cusAddress', 'cusContact'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updatePreviewHeader);
-        });
-
-        function updatePreviewHeader() {
-            document.getElementById('previewCompanyName').textContent = document.getElementById('companyName').value;
-            document.getElementById('previewCompanyTax').textContent = document.getElementById('companyTax').value;
-            document.getElementById('previewCompanyAddress').textContent = document.getElementById('companyAddress').value;
-            document.getElementById('previewSalesName').textContent = document.getElementById('salesName').value || '[Chưa nhập tên NV]';
-            document.getElementById('previewSalesPhone').textContent = document.getElementById('salesPhone').value || '...';
-            
-            document.getElementById('previewCusCompany').textContent = document.getElementById('cusCompany').value || '[Chưa chọn khách hàng]';
-            document.getElementById('previewCusTax').textContent = document.getElementById('cusTax').value || '...';
-            document.getElementById('previewCusAddress').textContent = document.getElementById('cusAddress').value || '...';
-            document.getElementById('previewCusContact').textContent = document.getElementById('cusContact').value || '...';
-        }
-
-        window.handleAuthSubmit = async function(event) {
-            event.preventDefault();
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                document.getElementById('authMessage').textContent = "Lỗi: " + error.message;
-                document.getElementById('authMessage').className = "mt-4 text-center text-sm font-medium text-red-600";
-            }
-        };
-
-        window.handleRegister = async function() {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            try {
-                await createUserWithEmailAndPassword(auth, email, password);
-                document.getElementById('authMessage').textContent = "Đăng ký thành công!";
-            } catch (error) {
-                document.getElementById('authMessage').textContent = "Lỗi: " + error.message;
-            }
-        };
-
-        window.handleLogout = async function() {
-            await signOut(auth);
-        };
-
-        onAuthStateChanged(auth, (user) => {
-            const authContainer = document.getElementById('authContainer');
-            const appContainer = document.getElementById('appContainer');
-            const userEmailDisplay = document.getElementById('userEmailDisplay');
-            const actionButtons = document.getElementById('actionButtons');
-
-            if (user) {
-                authContainer.classList.add('hidden');
-                appContainer.classList.remove('hidden');
-                userEmailDisplay.textContent = `Xin chào: ${user.email}`;
-                actionButtons.classList.remove('hidden');
-                document.getElementById('salesName').value = user.email.split('@')[0];
-                updatePreviewHeader();
-                loadMasterProducts();
-            } else {
-                authContainer.classList.remove('hidden');
-                appContainer.classList.add('hidden');
-                userEmailDisplay.textContent = "";
-                actionButtons.classList.add('hidden');
-            }
-        });
-
-        window.uploadExcelToCloud = async function() {
-            const fileInput = document.getElementById('excelFile');
-            const statusText = document.getElementById('uploadStatus');
-            const user = auth.currentUser;
-
-            if (!user || fileInput.files.length === 0) {
-                alert("Vui lòng chọn file Excel!");
-                return;
-            }
-
-            const reader = new FileReader();
-            statusText.textContent = "Đang đọc file...";
-
-            reader.onload = async function (e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const jsonSheet = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-
-                    statusText.textContent = `Đang đồng bộ ${jsonSheet.length} sản phẩm lên Cloud...`;
-
-                    let count = 0;
-                    for (const row of jsonSheet) {
-                        await addDoc(collection(db, "products"), {
-                            userId: user.uid,
-                            maSanPham: String(row['MÃ SẢN PHẨM'] || ''),
-                            tenSanPham: String(row['TÊN SẢN PHẨM'] || ''),
-                            urlHinhAnh: String(row['URL HÌNH ẢNH SẢN PHẨM'] || ''),
-                            donViTinh: String(row['ĐƠN VỊ TÍNH'] || 'Cái'),
-                            donGia: Number(row['ĐƠN GIÁ']) || 0,
-                            vat: Number(row['VAT (%)']) || 8,
-                            mauSac: String(row['MÀU SẮC'] || ''),
-                            thongSo: String(row['THÔNG SỐ SẢN PHẨM'] || '')
-                        });
-                        count++;
-                    }
-
-                    statusText.textContent = `Thành công! Đã thêm ${count} sản phẩm vào Kho Tổng.`;
-                    fileInput.value = "";
-                    loadMasterProducts();
-                } catch (error) {
-                    statusText.textContent = "Lỗi: " + error.message;
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        };
-
-        window.loadMasterProducts = async function() {
-            const user = auth.currentUser;
-            if (!user) return;
-
-            try {
-                const q = query(collection(db, "products"), where("userId", "==", user.uid));
-                const querySnapshot = await getDocs(q);
-                
-                myMasterProducts = [];
-                querySnapshot.forEach((docSnap) => {
-                    myMasterProducts.push({ id: docSnap.id, ...docSnap.data() });
-                });
-
-                document.getElementById('productCountBadge').textContent = `${myMasterProducts.length} sản phẩm`;
-                
-                const selectEl = document.getElementById('productSelectDropdown');
-                let optionsHtml = `<option value="">-- Chọn sản phẩm (${myMasterProducts.length}) --</option>`;
-                myMasterProducts.forEach((p, idx) => {
-                    optionsHtml += `<option value="${idx}">[${p.maSanPham}] ${p.tenSanPham} - ${p.mauSac} (${p.donGia.toLocaleString('vi-VN')} đ)</option>`;
-                });
-                selectEl.innerHTML = optionsHtml;
-            } catch (error) {
-                console.error("Lỗi tải kho tổng:", error);
-            }
-        };
-
-        window.addProductToQuote = function() {
-            const selectEl = document.getElementById('productSelectDropdown');
-            const qtyInput = document.getElementById('itemQuantity');
-            const selectedIdx = selectEl.value;
-
-            if (selectedIdx === "") {
-                alert("Vui lòng chọn sản phẩm!");
-                return;
-            }
-
-            const product = myMasterProducts[selectedIdx];
-            const quantity = parseInt(qtyInput.value) || 1;
-
-            const existing = currentQuoteItems.find(item => item.id === product.id && item.mauSac === product.mauSac);
-            if (existing) {
-                existing.quantity += quantity;
-            } else {
-                currentQuoteItems.push({ ...product, quantity: quantity });
-            }
-
-            renderQuoteTable();
-        };
-
-        window.removeItemFromQuote = function(index) {
-            currentQuoteItems.splice(index, 1);
-            renderQuoteTable();
-        };
-
-        function renderQuoteTable() {
-            const tbody = document.getElementById('quoteTableBody');
-            if (currentQuoteItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-6 text-center text-gray-400">Chưa có sản phẩm nào trong bảng báo giá.</td></tr>`;
-                document.getElementById('subTotalAmount').textContent = '0 đ';
-                document.getElementById('vatAmount').textContent = '0 đ';
-                document.getElementById('grandTotalAmount').textContent = '0 đ';
-                return;
-            }
-
-            let html = '';
-            let subTotal = 0;
-
-            currentQuoteItems.forEach((item, index) => {
-                const thanhTien = item.quantity * item.donGia;
-                subTotal += thanhTien;
-
-                let imgHtml = `<span class="text-[10px] text-gray-400">Không có</span>`;
-                if (item.urlHinhAnh && item.urlHinhAnh.startsWith('http')) {
-                    imgHtml = `<img src="${item.urlHinhAnh}" alt="SP" class="w-10 h-10 object-cover rounded mx-auto border" onerror="this.onerror=null; this.src='https://via.placeholder.com/40?text=No';">`;
-                }
-
-                html += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-2 py-2 text-center text-gray-600">${index + 1}</td>
-                        <td class="px-2 py-2 text-center">${imgHtml}</td>
-                        <td class="px-2 py-2 font-semibold text-blue-900">${item.maSanPham}</td>
-                        <td class="px-2 py-2 text-gray-800">
-                            <div class="font-bold">${item.tenSanPham}</div>
-                            <div class="text-[10px] text-gray-500">${item.thongSo || ''}</div>
-                        </td>
-                        <td class="px-2 py-2 text-gray-600">${item.mauSac}</td>
-                        <td class="px-2 py-2 text-center font-bold text-gray-800">${item.quantity}</td>
-                        <td class="px-2 py-2 text-right text-gray-700">${item.donGia.toLocaleString('vi-VN')} đ</td>
-                        <td class="px-2 py-2 text-right font-bold text-blue-600">${thanhTien.toLocaleString('vi-VN')} đ</td>
-                        <td class="px-2 py-2 text-center no-print">
-                            <button onclick="removeItemFromQuote(${index})" class="bg-red-100 text-red-600 hover:bg-red-200 px-1.5 py-0.5 rounded text-[10px] font-bold">X</button>
-                        </td>
+        <!-- BẢNG DANH SÁCH SẢN PHẨM -->
+        <div class="table-responsive mb-3">
+            <table class="table table-bordered align-middle" id="productTable">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th style="width: 5%;">STT</th>
+                        <th style="width: 12%;">Hình ảnh</th>
+                        <th style="width: 33%;">Thông số sản phẩm</th>
+                        <th style="width: 8%;">ĐVT</th>
+                        <th style="width: 10%;">Số lượng</th>
+                        <th style="width: 15%;">Đơn giá (VNĐ)</th>
+                        <th style="width: 14%;">Thành tiền (VNĐ)</th>
+                        <th style="width: 3%;" class="no-print">#</th>
                     </tr>
-                `;
-            });
+                </thead>
+                <tbody id="productList">
+                    <!-- Dữ liệu mẫu -->
+                    <tr>
+                        <td class="text-center stt">1</td>
+                        <td class="text-center">
+                            <input type="text" class="table-input img-url" value="https://via.placeholder.com/60" placeholder="Link ảnh" onchange="updateImage(this)">
+                            <img src="https://via.placeholder.com/60" class="img-preview mt-1" style="max-height: 40px; object-fit: contain;">
+                        </td>
+                        <td><textarea class="table-input text-start" rows="2" placeholder="Thông số kỹ thuật / Quy cách...">Thùng nhựa đặc HS025 - Kích thước: 600 x 400 x 150 mm</textarea></td>
+                        <td><input type="text" class="table-input text-center" value="Cái"></td>
+                        <td><input type="number" class="table-input text-center qty" value="10" min="1" oninput="calculateTotal()"></td>
+                        <td><input type="number" class="table-input text-end price" value="150000" min="0" oninput="calculateTotal()"></td>
+                        <td class="text-end fw-bold amount">1,500,000</td>
+                        <td class="text-center no-print"><button class="btn btn-sm btn-danger" onclick="removeRow(this)"><i class="fa-solid fa-trash"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn btn-sm btn-success no-print" onclick="addRow()"><i class="fa-solid fa-plus"></i> Thêm sản phẩm</button>
+        </div>
 
-            tbody.innerHTML = html;
+        <!-- TỔNG KẾT & THUẾ SUẤT -->
+        <div class="row justify-content-end mb-4">
+            <div class="col-md-5">
+                <table class="table table-sm borderless">
+                    <tr>
+                        <td><strong>Cộng tiền hàng:</strong></td>
+                        <td class="text-end" id="subTotal">1,500,000 VNĐ</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Thuế suất VAT (%):</strong> 
+                            <input type="number" id="vatRate" value="10" min="0" max="100" class="form-control d-inline-block w-25 text-center" oninput="calculateTotal()">
+                        </td>
+                        <td class="text-end" id="vatAmount">150,000 VNĐ</td>
+                    </tr>
+                    <tr class="table-active">
+                        <td><h5 class="fw-bold mb-0">Tổng thanh toán:</h5></td>
+                        <td class="text-end"><h5 class="fw-bold text-danger mb-0" id="grandTotal">1,650,000 VNĐ</h5></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
 
-            const vat = subTotal * 0.08;
-            const grandTotal = subTotal + vat;
+        <!-- PHẦN GHI CHÚ VÀ ĐIỀU KHOẢN (TÙY CHỈNH THÊM BỚT) -->
+        <div class="row">
+            <div class="col-12">
+                <h6 class="fw-bold text-secondary"><i class="fa-solid fa-note-sticky"></i> Điều khoản và Ghi chú:</h6>
+                <div id="notesContainer" class="border p-3 rounded bg-light">
+                    <div class="input-group mb-2 note-item">
+                        <span class="input-group-text">1.</span>
+                        <input type="text" class="form-control" value="Báo giá có hiệu lực trong vòng 30 ngày kể từ ngày báo giá.">
+                        <button class="btn btn-outline-danger no-print" onclick="removeNote(this)"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="input-group mb-2 note-item">
+                        <span class="input-group-text">2.</span>
+                        <input type="text" class="form-control" value="Phương thức thanh toán: Chuyển khoản hoặc tiền mặt (Đặt cọc 30% khi đặt hàng, 70% khi nhận hàng).">
+                        <button class="btn btn-outline-danger no-print" onclick="removeNote(this)"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="input-group mb-2 note-item">
+                        <span class="input-group-text">3.</span>
+                        <input type="text" class="form-control" value="Địa điểm giao hàng: Giao hàng tại kho bên mua hoặc theo thỏa thuận.">
+                        <button class="btn btn-outline-danger no-print" onclick="removeNote(this)"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary mt-2 no-print" onclick="addNote()"><i class="fa-solid fa-plus"></i> Thêm ghi chú/mục điều khoản</button>
+            </div>
+        </div>
 
-            document.getElementById('subTotalAmount').textContent = subTotal.toLocaleString('vi-VN') + ' đ';
-            document.getElementById('vatAmount').textContent = vat.toLocaleString('vi-VN') + ' đ';
-            document.getElementById('grandTotalAmount').textContent = grandTotal.toLocaleString('vi-VN') + ' đ';
+        <!-- CHỮ KÝ -->
+        <div class="row mt-5 text-center">
+            <div class="col-6">
+                <p class="fw-bold mb-5">ĐẠI DIỆN KHÁCH HÀNG<br><span class="fw-normal fst-italic" style="font-size: 12px;">(Ký, ghi rõ họ tên)</span></p>
+            </div>
+            <div class="col-6">
+                <p class="fw-bold mb-5">ĐẠI DIỆN BÁO GIÁ<br><span class="fw-normal fst-italic" style="font-size: 12px;">(Ký, đóng dấu, ghi rõ họ tên)</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript xử lý nghiệp vụ -->
+<script>
+    // Dữ liệu thông tin công ty mặc định
+    const companyData = {
+        "nhua-viet-nhat": `<strong>CÔNG TY TNHH NHỰA VIỆT NHẬT</strong><br>Mã số thuế: 0312069254<br>Địa chỉ: 66/94 Bình Thành, Phường Bình Tân, TP Hồ Chí Minh, Việt Nam`,
+        "cn-viet-nhat": `<strong>CÔNG TY TNHH CÔNG NGHIỆP VIỆT NHẬT</strong><br>Mã số thuế: 0305166722<br>Địa chỉ: 66/92 Bình Thành, Phường Bình Tân, TP Hồ Chí Minh, Việt Nam`
+    };
+
+    function updateCompanyInfo() {
+        const issuer = document.getElementById('companyIssuer').value;
+        document.getElementById('issuerDetails').innerHTML = companyData[issuer];
+    }
+    
+    // Khởi tạo ngày hiện tại và thông tin công ty mặc định
+    document.getElementById('quoteDate').valueAsDate = new Date();
+    updateCompanyInfo();
+
+    // Cập nhật hình ảnh sản phẩm từ URL input
+    function updateImage(input) {
+        const url = input.value;
+        const img = input.parentElement.querySelector('.img-preview');
+        img.src = url ? url : 'https://via.placeholder.com/60';
+    }
+
+    // Thêm dòng sản phẩm mới
+    function addRow() {
+        const tbody = document.getElementById('productList');
+        const rowCount = tbody.rows.length + 1;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="text-center stt">${rowCount}</td>
+            <td class="text-center">
+                <input type="text" class="table-input img-url" value="" placeholder="Link ảnh" onchange="updateImage(this)">
+                <img src="https://via.placeholder.com/60" class="img-preview mt-1" style="max-height: 40px; object-fit: contain;">
+            </td>
+            <td><textarea class="table-input text-start" rows="2" placeholder="Thông số kỹ thuật / Quy cách..."></textarea></td>
+            <td><input type="text" class="table-input text-center" value="Cái"></td>
+            <td><input type="number" class="table-input text-center qty" value="1" min="1" oninput="calculateTotal()"></td>
+            <td><input type="number" class="table-input text-end price" value="0" min="0" oninput="calculateTotal()"></td>
+            <td class="text-end fw-bold amount">0</td>
+            <td class="text-center no-print"><button class="btn btn-sm btn-danger" onclick="removeRow(this)"><i class="fa-solid fa-trash"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+        updateSTT();
+        calculateTotal();
+    }
+
+    // Xóa dòng sản phẩm
+    function removeRow(btn) {
+        btn.closest('tr').remove();
+        updateSTT();
+        calculateTotal();
+    }
+
+    // Cập nhật lại số thứ tự STT
+    function updateSTT() {
+        const rows = document.querySelectorAll('#productList tr');
+        rows.forEach((row, index) => {
+            row.querySelector('.stt').innerText = index + 1;
+        });
+    }
+
+    // Tính toán thành tiền, tổng tiền và VAT
+    function calculateTotal() {
+        let subTotal = 0;
+        const rows = document.querySelectorAll('#productList tr');
+        rows.forEach(row => {
+            const qty = parseFloat(row.querySelector('.qty').value) || 0;
+            const price = parseFloat(row.querySelector('.price').value) || 0;
+            const amount = qty * price;
+            row.querySelector('.amount').innerText = amount.toLocaleString('vi-VN');
+            subTotal += amount;
+        });
+
+        document.getElementById('subTotal').innerText = subTotal.toLocaleString('vi-VN') + ' VNĐ';
+        
+        const vatRate = parseFloat(document.getElementById('vatRate').value) || 0;
+        const vatAmount = subTotal * (vatRate / 100);
+        document.getElementById('vatAmount').innerText = vatAmount.toLocaleString('vi-VN') + ' VNĐ';
+
+        const grandTotal = subTotal + vatAmount;
+        document.getElementById('grandTotal').innerText = grandTotal.toLocaleString('vi-VN') + ' VNĐ';
+    }
+
+    // Tra cứu mã số thuế qua 2 API (API chính và API dự phòng)
+    async function lookupTaxCode() {
+        const taxCode = document.getElementById('searchTaxCode').value.trim();
+        if (!taxCode) {
+            alert('Vui lòng nhập mã số thuế cần tra cứu!');
+            return;
         }
 
-        window.saveQuoteToCloud = function() {
-            if (currentQuoteItems.length === 0) {
-                alert("Bảng báo giá trống!");
+        const primaryApi = `https://api.vietqr.io/v2/business/${taxCode}`;
+        const backupApi = `https://api.xinvoice.vn/gdt-api/tax-payer/${taxCode}`;
+
+        try {
+            let response = await fetch(primaryApi);
+            let data = await response.json();
+            
+            if (data && data.code === "00" && data.data) {
+                document.getElementById('cusName').value = data.data.name || '';
+                document.getElementById('cusTaxCode').value = taxCode;
+                document.getElementById('cusAddress').value = data.data.address || '';
+                alert('Tra cứu thông tin thành công!');
                 return;
             }
-            alert("Đã lưu bảng báo giá lên Cloud thành công!");
+            throw new Error('Chuyển sang API dự phòng');
+        } catch (error) {
+            console.log('Thử API dự phòng...');
+            try {
+                let response = await fetch(backupApi);
+                let data = await response.json();
+                if (data) {
+                    document.getElementById('cusName').value = data.name || data.buyerName || '';
+                    document.getElementById('cusTaxCode').value = taxCode;
+                    document.getElementById('cusAddress').value = data.address || '';
+                    alert('Tra cứu thành công qua API dự phòng!');
+                } else {
+                    alert('Không tìm thấy thông tin doanh nghiệp với mã số thuế này.');
+                }
+            } catch (err) {
+                alert('Không thể kết nối đến hệ thống tra cứu. Vui lòng nhập thông tin thủ công.');
+            }
+        }
+    }
+
+    // Lưu thông tin khách hàng vào LocalStorage để làm báo cáo sau này
+    function saveCustomerData() {
+        const customer = {
+            name: document.getElementById('cusName').value,
+            taxCode: document.getElementById('cusTaxCode').value,
+            address: document.getElementById('cusAddress').value,
+            contact: document.getElementById('cusContact').value,
+            date: document.getElementById('quoteDate').value,
+            quoteNumber: document.getElementById('quoteNumber').value
         };
 
-        window.exportQuoteExcel = function() {
-            if (currentQuoteItems.length === 0) {
-                alert("Chưa có sản phẩm để xuất Excel!");
-                return;
-            }
-            const dataToExport = currentQuoteItems.map((item, idx) => ({
-                "STT": idx + 1,
-                "MÃ SẢN PHẨM": item.maSanPham,
-                "TÊN SẢN PHẨM": item.tenSanPham,
-                "THÔNG SỐ": item.thongSo,
-                "MÀU SẮC": item.mauSac,
-                "SỐ LƯỢNG": item.quantity,
-                "ĐƠN GIÁ": item.donGia,
-                "THÀNH TIỀN": item.quantity * item.donGia
-            }));
-            const ws = XLSX.utils.json_to_sheet(dataToExport);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "BaoGia");
-            XLSX.writeFile(wb, "BaoGia_VietNhat.xlsx");
+        if (!customer.name) {
+            alert('Vui lòng nhập tên khách hàng trước khi lưu!');
+            return;
+        }
+
+        let savedCustomers = JSON.parse(localStorage.getItem('saved_customers') || '[]');
+        savedCustomers.push(customer);
+        localStorage.setItem('saved_customers', JSON.stringify(savedCustomers));
+        alert('Đã lưu thông tin khách hàng thành công cho báo cáo sau này!');
+    }
+
+    // Thêm ghi chú điều khoản
+    function addNote() {
+        const container = document.getElementById('notesContainer');
+        const count = container.querySelectorAll('.note-item').length + 1;
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2 note-item';
+        div.innerHTML = `
+            <span class="input-group-text">${count}.</span>
+            <input type="text" class="form-control" value="Nội dung điều khoản mới...">
+            <button class="btn btn-outline-danger no-print" onclick="removeNote(this)"><i class="fa-solid fa-xmark"></i></button>
+        `;
+        container.appendChild(div);
+    }
+
+    function removeNote(btn) {
+        btn.closest('.note-item').remove();
+        // Cập nhật lại số thứ tự ghi chú
+        const items = document.querySelectorAll('#notesContainer .note-item');
+        items.forEach((item, index) => {
+            item.querySelector('.input-group-text').innerText = (index + 1) + '.';
+        });
+    }
+
+    // Xuất dữ liệu sản phẩm ra Excel
+    function exportToExcel() {
+        let data = [];
+        const rows = document.querySelectorAll('#productList tr');
+        rows.forEach((row, index) => {
+            data.push({
+                "STT": index + 1,
+                "Hình Ảnh": row.querySelector('.img-url').value,
+                "Thông Số Sản Phẩm": row.querySelector('textarea').value,
+                "ĐVT": row.querySelectorAll('input')[1].value,
+                "Số Lượng": row.querySelector('.qty').value,
+                "Đơn Giá": row.querySelector('.price').value
+            });
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachSanPham");
+        XLSX.writeFile(workbook, "BaoGia_SanPham.xlsx");
+    }
+
+    // Nhập dữ liệu sản phẩm từ Excel
+    function importFromExcel(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheet = workbook.SheetNames[0];
+            const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+
+            const tbody = document.getElementById('productList');
+            tbody.innerHTML = ''; // Xóa dữ liệu cũ
+
+            excelData.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-center stt">${index + 1}</td>
+                    <td class="text-center">
+                        <input type="text" class="table-input img-url" value="${item['Hình Ảnh'] || ''}" placeholder="Link ảnh" onchange="updateImage(this)">
+                        <img src="${item['Hình Ảnh'] || 'https://via.placeholder.com/60'}" class="img-preview mt-1" style="max-height: 40px; object-fit: contain;">
+                    </td>
+                    <td><textarea class="table-input text-start" rows="2">${item['Thông Số Sản Phẩm'] || ''}</textarea></td>
+                    <td><input type="text" class="table-input text-center" value="${item['ĐVT'] || 'Cái'}"></td>
+                    <td><input type="number" class="table-input text-center qty" value="${item['Số Lượng'] || 1}" min="1" oninput="calculateTotal()"></td>
+                    <td><input type="number" class="table-input text-end price" value="${item['Đơn Giá'] || 0}" min="0" oninput="calculateTotal()"></td>
+                    <td class="text-end fw-bold amount">0</td>
+                    <td class="text-center no-print"><button class="btn btn-sm btn-danger" onclick="removeRow(this)"><i class="fa-solid fa-trash"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            calculateTotal();
+            alert('Nhập file Excel thành công!');
         };
-    </script>
+        reader.readAsArrayBuffer(file);
+    }
+</script>
+
 </body>
 </html>
